@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">PersonalPins</string>
+    <string name="no_boards">There are currently no boards</string>
+    <string name="no_pins">There are currently no pins</string>
+    <string name="pin_count">Pins:</string>
+    <string name="search_icon_title">Search</string>
+    <string name="camera_icon_title">Camera</string>
+    <string name="board_title">Board Title</string>
+    <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
+    <string name="pin_title">Pin Title</string>
+    <string name="tags">Tags</string>
+    <string name="enter">+</string>
+</resources>

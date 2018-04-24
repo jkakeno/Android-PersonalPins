@@ -1,0 +1,99 @@
+package com.example.personalpins.Model;
+
+import android.net.Uri;
+import android.os.Parcel;
+import android.os.Parcelable;
+
+import java.util.ArrayList;
+
+public class Pin implements Parcelable{
+    long id;
+    String title;
+    Uri imageUri;
+    String boardId;
+    ArrayList<Tag> tagList;
+    ArrayList<Comment> commentList;
+
+    public Pin() {
+    }
+
+    protected Pin(Parcel in) {
+        id = in.readLong();
+        title = in.readString();
+        imageUri = in.readParcelable(Uri.class.getClassLoader());
+        boardId = in.readString();
+    }
+
+    public static final Creator<Pin> CREATOR = new Creator<Pin>() {
+        @Override
+        public Pin createFromParcel(Parcel in) {
+            return new Pin(in);
+        }
+
+        @Override
+        public Pin[] newArray(int size) {
+            return new Pin[size];
+        }
+    };
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public Uri getImageUri() {
+        return imageUri;
+    }
+
+    public void setImageUri(Uri imageUri) {
+        this.imageUri = imageUri;
+    }
+
+    public String getBoardId() {
+        return boardId;
+    }
+
+    public void setBoardId(String boardId) {
+        this.boardId = boardId;
+    }
+
+    public ArrayList<Tag> getTagList() {
+        return tagList;
+    }
+
+    public void setTagList(ArrayList<Tag> tagList) {
+        this.tagList = tagList;
+    }
+
+    public ArrayList<Comment> getCommentList() {
+        return commentList;
+    }
+
+    public void setCommentList(ArrayList<Comment> commentList) {
+        this.commentList = commentList;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel parcel, int i) {
+        parcel.writeLong(id);
+        parcel.writeString(title);
+        parcel.writeParcelable(imageUri, i);
+        parcel.writeString(boardId);
+    }
+}
