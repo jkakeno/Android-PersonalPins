@@ -10,7 +10,6 @@ import android.widget.TextView;
 import com.example.personalpins.InteractionListener;
 import com.example.personalpins.Model.Pin;
 import com.example.personalpins.R;
-import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
@@ -39,9 +38,7 @@ public class PinListAdapter extends RecyclerView.Adapter<PinListAdapter.ViewHold
         final Pin pin = pinList.get(position);
 
         /*Set the adapter holder view with the image boardUri.*/
-        Picasso.with(holder.pinImage.getContext())
-                .load(pinList.get(position).getImageUri())
-                .into(holder.pinImage);
+        holder.pinImage.setImageBitmap(pin.getImage());
 
         /*Notify the main activity of the board_item image clicked.*/
         holder.pinImage.setOnClickListener(new View.OnClickListener() {

@@ -1,8 +1,10 @@
 package com.example.personalpins;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
@@ -13,6 +15,7 @@ import com.example.personalpins.UI.PinEditFragment;
 import com.example.personalpins.UI.PinListFragment;
 import com.example.personalpins.UI.ViewPagerFragment;
 
+import java.io.IOException;
 import java.util.ArrayList;
 
 /*This app allows users to organize their photos and videos in collections.
@@ -33,7 +36,9 @@ public class MainActivity extends AppCompatActivity implements InteractionListen
 
     /*Create a field to store the path to save the picture or video in the device.*/
     public static Uri boardUri;
+    public static Bitmap boardBitmap;
     public static Uri pinUri;
+    public static Bitmap pinBitmap;
 
     ArrayList<Board> boardList;
     Board selectedBoard;
@@ -68,11 +73,24 @@ public class MainActivity extends AppCompatActivity implements InteractionListen
             if(requestCode == REQUEST_PICK_BOARD_PHOTO){
                 if(data !=null){
                     boardUri = data.getData();
-                    /*TODO: Convert the image @ boardUri to byte array and store it .*/
+                    /*Store board image bitmap.*/
+                    /*https://stackoverflow.com/questions/3879992/how-to-get-bitmap-from-an-uri*/
+                    try {
+                        boardBitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(),boardUri);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             }else if(requestCode == REQUEST_PICK_PIN_PHOTO){
                 if(data !=null) {
                     pinUri = data.getData();
+                    /*Store pin image bitmap.*/
+                    /*https://stackoverflow.com/questions/3879992/how-to-get-bitmap-from-an-uri*/
+                    try {
+                        pinBitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(),pinUri);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                     Log.d(TAG,"pinUri = " + String.valueOf(boardUri));
                     /*Start Pin_Edit_Fragment and pass the selected board.*/
                     PinEditFragment pinEditFragment = PinEditFragment.newInstance(selectedBoard);

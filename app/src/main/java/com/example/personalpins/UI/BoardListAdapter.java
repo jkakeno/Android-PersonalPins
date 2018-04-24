@@ -10,7 +10,6 @@ import android.widget.TextView;
 import com.example.personalpins.InteractionListener;
 import com.example.personalpins.Model.Board;
 import com.example.personalpins.R;
-import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
@@ -45,9 +44,8 @@ public class BoardListAdapter extends RecyclerView.Adapter<BoardListAdapter.View
         final Board board = boardList.get(position);
 
         /*Set the adapter holder view with the image boardUri.*/
-        Picasso.with(holder.boardImage.getContext())
-                .load(boardList.get(position).getImageUri())
-                .into(holder.boardImage);
+        /*https://stackoverflow.com/questions/2928904/how-to-set-the-bitmap-to-the-imageview-in-main-xml-captured-from-the-camera*/
+        holder.boardImage.setImageBitmap(board.getImage());
 
         /*Notify the main activity of the board_item image clicked.*/
         holder.boardImage.setOnClickListener(new View.OnClickListener() {

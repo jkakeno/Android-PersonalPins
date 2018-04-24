@@ -28,7 +28,6 @@ import com.example.personalpins.Model.Comment;
 import com.example.personalpins.Model.Pin;
 import com.example.personalpins.Model.Tag;
 import com.example.personalpins.R;
-import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
@@ -110,11 +109,9 @@ public class PinEditFragment extends Fragment{
         pin.setBoardId(String.valueOf(board.getId()));
 
         /*Set the fragment image view with the default image boardUri.*/
-        Picasso.with(getActivity())
-                .load(MainActivity.pinUri)
-                .into(pinImage);
+        pinImage.setImageBitmap(MainActivity.pinBitmap);
         /*Set the board_item object boardUri with the default boardUri.*/
-        pin.setImageUri(MainActivity.pinUri);
+        pin.setImage(MainActivity.pinBitmap);
 
         /*Display key board.*/
         imgr = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -298,16 +295,10 @@ public class PinEditFragment extends Fragment{
         Log.d(TAG,"onResume");
 
         /*Set the fragment image view with the new image boardUri.*/
-        Picasso.with(getActivity())
-                .load(MainActivity.pinUri)
-                .into(pinImage);
+        /*https://stackoverflow.com/questions/2928904/how-to-set-the-bitmap-to-the-imageview-in-main-xml-captured-from-the-camera*/
+        pinImage.setImageBitmap(MainActivity.pinBitmap);
         /*Set the board_item object boardUri with the new boardUri.*/
-        pin.setImageUri(MainActivity.pinUri);
-
-//        db = new DataBase(getActivity());
-//        tagList=db.getTagList(pin.getId());
-//        commentList=db.getCommentList(pin.getId());
-
+        pin.setImage(MainActivity.pinBitmap);
 
         if(tagList.size()>0) {
             tagListAdapter = new TagListAdapter(tagList);

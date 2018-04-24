@@ -18,7 +18,6 @@ import com.example.personalpins.InteractionListener;
 import com.example.personalpins.MainActivity;
 import com.example.personalpins.Model.Board;
 import com.example.personalpins.R;
-import com.squareup.picasso.Picasso;
 
 public class BoardEditFragment extends Fragment{
 
@@ -75,11 +74,10 @@ public class BoardEditFragment extends Fragment{
         listener.onBoardEditBoardImageInteraction(false);
 
         /*Set the fragment image view with the default image boardUri.*/
-        Picasso.with(getActivity())
-                .load(MainActivity.boardUri)
-                .into(boardImage);
+        /*https://stackoverflow.com/questions/2928904/how-to-set-the-bitmap-to-the-imageview-in-main-xml-captured-from-the-camera*/
+        boardImage.setImageBitmap(MainActivity.boardBitmap);
         /*Set the board_item object boardUri with the default boardUri.*/
-        board.setImageUri(MainActivity.boardUri);
+        board.setImage(MainActivity.boardBitmap);
 
         /*Once the board_item image is clicked notify main activity that it was clicked. */
         boardImage.setOnClickListener(new View.OnClickListener() {
@@ -133,11 +131,10 @@ public class BoardEditFragment extends Fragment{
         Log.d(TAG, "Uri: "+String.valueOf(MainActivity.boardUri));
 
         /*Set the fragment image view with the new image boardUri.*/
-        Picasso.with(getActivity())
-                .load(MainActivity.boardUri)
-                .into(boardImage);
+        /*https://stackoverflow.com/questions/2928904/how-to-set-the-bitmap-to-the-imageview-in-main-xml-captured-from-the-camera*/
+        boardImage.setImageBitmap(MainActivity.boardBitmap);
         /*Set the board_item object boardUri with the new boardUri.*/
-        board.setImageUri(MainActivity.boardUri);
+        board.setImage(MainActivity.boardBitmap);
     }
 
     @Override

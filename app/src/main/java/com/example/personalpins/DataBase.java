@@ -5,7 +5,8 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.net.Uri;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.provider.BaseColumns;
 import android.util.Log;
 
@@ -14,6 +15,7 @@ import com.example.personalpins.Model.Comment;
 import com.example.personalpins.Model.Pin;
 import com.example.personalpins.Model.Tag;
 
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 
 public class DataBase extends SQLiteOpenHelper {
@@ -39,11 +41,14 @@ public class DataBase extends SQLiteOpenHelper {
         super(context, DB_NAME, null, DB_VER);
     }
 
+    /*Image store and retrieve:
+    * https://stackoverflow.com/questions/11790104/how-to-storebitmap-image-and-retrieve-image-from-sqlite-database-in-android*/
+
     @Override
     public void onCreate(SQLiteDatabase db) {
         Log.d(TAG, "onCreate");
-        String createBoardTable = "CREATE TABLE " + TABLE_BOARD + "( " + BaseColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " + COL_BOARD_TITLE + " TEXT, " + COL_BOARD_IMAGE + " TEXT )";
-        String createPinTable = "CREATE TABLE " + TABLE_PIN + "( " + BaseColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " + COL_PIN_TITLE + " TEXT, " + COL_PIN_IMAGE + " TEXT, " + COL_PIN_FOREIGN_KEY +" TEXT )";
+        String createBoardTable = "CREATE TABLE " + TABLE_BOARD + "( " + BaseColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " + COL_BOARD_TITLE + " TEXT, " + COL_BOARD_IMAGE + " BLOB )";
+        String createPinTable = "CREATE TABLE " + TABLE_PIN + "( " + BaseColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " + COL_PIN_TITLE + " TEXT, " + COL_PIN_IMAGE + " BLOB, " + COL_PIN_FOREIGN_KEY +" TEXT )";
         String createTagTable = "CREATE TABLE " + TABLE_TAG + "( " + BaseColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " + COL_TAG + " TEXT, " + COL_TAG_FOREIGN_KEY + " TEXT )";
         String createCommentTable = "CREATE TABLE " + TABLE_COMMENT + "( " + BaseColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " + COL_COMMENT + " TEXT, " + COL_COMMENT_FOREIGN_KEY + " TEXT )";
 
@@ -71,24 +76,34 @@ public class DataBase extends SQLiteOpenHelper {
     /*Helper Methods.*/
     public void insertBoard (Board board){
         String boardTitle = board.getTitle();
-        Uri boardUri = board.getImageUri();
-        /*TODO: Convert boardUri to ByteArray.*/
+        /*Get the image bitmap from the object.*/
+        Bitmap boardBitmap = board.getImage();
+        /*Convert bitmap to byte array.*/
+        byte [] boardImage = getBytes(boardBitmap);
         SQLiteDatabase db= this.getWritableDatabase();
         db.beginTransaction();
         ContentValues values = new ContentValues();
         values.put(COL_BOARD_TITLE, boardTitle);
-        /*https://stackoverflow.com/questions/17356312/converting-of-uri-to-string*/
-        /*TODO: Store ByteArray.*/
-        values.put(COL_BOARD_IMAGE, boardUri.toString());
+        /*Store byte array.*/
+        values.put(COL_BOARD_IMAGE, boardImage);
         db.insert(TABLE_BOARD,null,values);
         db.setTransactionSuccessful();
         db.endTransaction();
         db.close();
     }
 
+    private byte[] getBytes(Bitmap bitmap) {
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.PNG,0,stream);
+        return stream.toByteArray();
+    }
+
     public void insertPin (Pin pin){
         String pinTitle = pin.getTitle();
-        Uri pinUri = pin.getImageUri();
+        /*Get the image bitmap from the object.*/
+        Bitmap pinBitmap = pin.getImage();
+        /*Convert bitmap to byte array.*/
+        byte [] pinImage = getBytes(pinBitmap);
         String boardId = pin.getBoardId();
         long pinId = pin.getId();
         ArrayList<Tag> tagList = pin.getTagList();
@@ -105,8 +120,8 @@ public class DataBase extends SQLiteOpenHelper {
         db.beginTransaction();
         ContentValues values = new ContentValues();
         values.put(COL_PIN_TITLE,pinTitle);
-        /*https://stackoverflow.com/questions/17356312/converting-of-uri-to-string*/
-        values.put(COL_PIN_IMAGE,pinUri.toString());
+        /*Store byte array.*/
+        values.put(COL_PIN_IMAGE,pinImage);
         values.put(COL_PIN_FOREIGN_KEY, boardId);
         db.insert(TABLE_PIN,null,values);
         db.setTransactionSuccessful();
@@ -150,16 +165,24 @@ public class DataBase extends SQLiteOpenHelper {
             do{
                 long boardId = cursor.getLong(cursor.getColumnIndex(BaseColumns._ID));
                 String boardTitle = cursor.getString(cursor.getColumnIndex(COL_BOARD_TITLE));
-                String boardImage = cursor.getString(cursor.getColumnIndex(COL_BOARD_IMAGE));
+                /*Get image byte array from data base.*/
+                byte[] boardImage = cursor.getBlob(cursor.getColumnIndex(COL_BOARD_IMAGE));
+                /*Convert byte array to bitmap.*/
+                Bitmap boardBitmap = getImage(boardImage);
                 Board board = new Board();
                 board.setId(boardId);
                 board.setTitle(boardTitle);
-                board.setImageUri(Uri.parse(boardImage));
+                /*Set the object image with the bitmap.*/
+                board.setImage(boardBitmap);
                 board.setPinList(getPinList(boardId));
                 boardList.add(board);
             }while(cursor.moveToNext());
         }
         return boardList;
+    }
+
+    private Bitmap getImage(byte[] bytes) {
+        return BitmapFactory.decodeByteArray(bytes,0,bytes.length);
     }
 
     public ArrayList<Pin> getPinList(long boardId){
@@ -170,11 +193,15 @@ public class DataBase extends SQLiteOpenHelper {
             do{
                 long pinId = cursor.getLong(cursor.getColumnIndex(BaseColumns._ID));
                 String pinTitle = cursor.getString(cursor.getColumnIndex(COL_PIN_TITLE));
-                String pinImage = cursor.getString(cursor.getColumnIndex(COL_PIN_IMAGE));
+                /*Get image byte array from data base.*/
+                byte[] pinImage = cursor.getBlob(cursor.getColumnIndex(COL_PIN_IMAGE));
+                /*Convert byte array to bitmap.*/
+                Bitmap pinBitmap = getImage(pinImage);
                 Pin pin = new Pin();
                 pin.setId(pinId);
                 pin.setTitle(pinTitle);
-                pin.setImageUri(Uri.parse(pinImage));
+                /*Set the object image with the bitmap.*/
+                pin.setImage(pinBitmap);
                 pin.setTagList(getTagList(pinId));
                 pin.setCommentList(getCommentList(pinId));
                 pinList.add(pin);
