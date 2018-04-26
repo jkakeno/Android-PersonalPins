@@ -9,13 +9,23 @@
     <TextView
         android:id="@+id/pinTitle"
         android:text="Title"
+        android:textSize="20sp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
     <ImageView
         android:id="@+id/pinImage"
-        android:src="@drawable/ic_action_camera_roll"
         android:layout_width="match_parent"
         android:layout_height="200dp"/>
 
+    <VideoView
+        android:id="@+id/pinVideo"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"/>
+
+    </RelativeLayout>
 </LinearLayout>

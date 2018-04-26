@@ -19,8 +19,8 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.VideoView;
 
-import com.example.personalpins.DataBase;
 import com.example.personalpins.InteractionListener;
 import com.example.personalpins.MainActivity;
 import com.example.personalpins.Model.Board;
@@ -57,7 +57,8 @@ public class PinEditFragment extends Fragment{
     ImageButton tagBtn;
     ImageButton commentBtn;
     Board board;
-    DataBase db;
+    VideoView pinVideo;
+
 
     public PinEditFragment() {
     }
@@ -78,10 +79,8 @@ public class PinEditFragment extends Fragment{
 
         /*Create a new board_item object.*/
         pin = new Pin();
-
-
-
-//        board = new Board();
+        tagList = new ArrayList<>();
+        commentList = new ArrayList<>();
 
         if (getArguments() != null) {
             board = getArguments().getParcelable(ARG);
@@ -105,13 +104,29 @@ public class PinEditFragment extends Fragment{
         noComments = view.findViewById(R.id.noComments);
         tagRecyclerView = view.findViewById(R.id.tag_recycler_view);
         commentRecyclerView = view.findViewById(R.id.comment_recycler_view);
+        pinVideo = view.findViewById(R.id.pinVideo);
 
         pin.setBoardId(String.valueOf(board.getId()));
 
         /*Set the fragment image view with the default image boardUri.*/
-        pinImage.setImageBitmap(MainActivity.pinBitmap);
-        /*Set the board_item object boardUri with the default boardUri.*/
-        pin.setImage(MainActivity.pinBitmap);
+        if(MainActivity.selectedMedia.equals("Photo")){
+            pinImage.setVisibility(View.VISIBLE);
+            pinVideo.setVisibility(View.INVISIBLE);
+            pinImage.setImageBitmap(MainActivity.pinBitmap);
+            /*Set the board_item object boardUri with the default boardUri.*/
+            pin.setImage(MainActivity.pinBitmap);
+        }else if(MainActivity.selectedMedia.equals("Video")){
+            pinImage.setVisibility(View.INVISIBLE);
+            pinVideo.setVisibility(View.VISIBLE);
+            pinVideo.setVideoURI(MainActivity.pinVideoUri);
+            /*https://stackoverflow.com/questions/3263736/playing-a-video-in-videoview-in-android*/
+            pinVideo.start();
+            /*Set the board_item object boardUri with the default boardUri.*/
+//            pin.setVideo(MainActivity.pinUri);
+            pin.setVideo(MainActivity.pinVideoUri);
+        }
+
+
 
         /*Display key board.*/
         imgr = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -130,7 +145,7 @@ public class PinEditFragment extends Fragment{
                 imgr.hideSoftInputFromWindow(pinTitle.getWindowToken(), 0);
             }
         });
-        tagList = new ArrayList<>();
+
         tagBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -139,7 +154,7 @@ public class PinEditFragment extends Fragment{
                 /*Create dialog to enter tag.*/
                 AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getActivity());
                 LayoutInflater inflater = getActivity().getLayoutInflater();
-                final View dialogView = inflater.inflate(R.layout.dialog_layout, null);
+                final View dialogView = inflater.inflate(R.layout.tag_dialog_layout, null);
                 dialogBuilder.setView(dialogView);
 
                 final EditText editText = (EditText) dialogView.findViewById(R.id.dialogEdittext);
@@ -170,11 +185,6 @@ public class PinEditFragment extends Fragment{
                             noTags.setVisibility(View.VISIBLE);
                         }
 
-                        Log.d(TAG,"Tag List Size: "+tagList.size());
-
-                        /*TODO: Add an item to the tags recycler view.*/
-                        /*Add a tag to the data base.*/
-
                         /*Dismiss the keyboard.*/
                         imgr.hideSoftInputFromWindow(editText.getWindowToken(), 0);
                         dialog.dismiss();
@@ -184,6 +194,8 @@ public class PinEditFragment extends Fragment{
                 /*Set negative button action.*/
                 dialogBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
+                        /*Dismiss the keyboard.*/
+                        imgr.hideSoftInputFromWindow(editText.getWindowToken(), 0);
                         dialog.cancel();
                     }
                 });
@@ -191,7 +203,7 @@ public class PinEditFragment extends Fragment{
                 dialog.show();
             }
         });
-        commentList = new ArrayList<>();
+
         commentBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -200,7 +212,7 @@ public class PinEditFragment extends Fragment{
                 /*Create dialog to enter comment.*/
                 AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getActivity());
                 LayoutInflater inflater = getActivity().getLayoutInflater();
-                final View dialogView = inflater.inflate(R.layout.dialog_layout, null);
+                final View dialogView = inflater.inflate(R.layout.comment_dialog_layout, null);
                 dialogBuilder.setView(dialogView);
 
                 final EditText editText = (EditText) dialogView.findViewById(R.id.dialogEdittext);
@@ -231,10 +243,6 @@ public class PinEditFragment extends Fragment{
                             noComments.setVisibility(View.VISIBLE);
                         }
 
-                        Log.d(TAG,"Comment List Size: "+commentList.size());
-                        /*TODO: Add an item to the comments recycler view.*/
-                        /*Add a comment to the data base.*/
-
                         /*Dismiss the keyboard.*/
                         imgr.hideSoftInputFromWindow(editText.getWindowToken(), 0);
                         dialog.dismiss();
@@ -244,6 +252,8 @@ public class PinEditFragment extends Fragment{
                 /*Set negative button action.*/
                 dialogBuilder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
+                        /*Dismiss the keyboard.*/
+                        imgr.hideSoftInputFromWindow(editText.getWindowToken(), 0);
                         dialog.cancel();
                     }
                 });
@@ -293,13 +303,32 @@ public class PinEditFragment extends Fragment{
     public void onResume() {
         super.onResume();
         Log.d(TAG,"onResume");
+        if(MainActivity.selectedMedia.equals("Photo")){
+            pinImage.setVisibility(View.VISIBLE);
+            pinVideo.setVisibility(View.INVISIBLE);
+            pinImage.setImageBitmap(MainActivity.pinBitmap);
+            /*Set the board_item object boardUri with the new boardUri.*/
+            pin.setImage(MainActivity.pinBitmap);
+        }else if(MainActivity.selectedMedia.equals("Video")){
+            pinImage.setVisibility(View.INVISIBLE);
+            pinVideo.setVisibility(View.VISIBLE);
+            pinVideo.setVideoURI(MainActivity.pinVideoUri);
+            /*https://stackoverflow.com/questions/17079593/how-to-set-the-preview-image-in-videoview-before-playing*/
+            pinVideo.pause();
+            pinVideo.seekTo(100); // 100 milliseconds (0.1 s) into the clip.
+            /*Set the board_item object boardUri with the default boardUri.*/
+//            pin.setVideo(MainActivity.pinUri);
+            pin.setVideo(MainActivity.pinVideoUri);
+        }
 
-        /*Set the fragment image view with the new image boardUri.*/
-        /*https://stackoverflow.com/questions/2928904/how-to-set-the-bitmap-to-the-imageview-in-main-xml-captured-from-the-camera*/
-        pinImage.setImageBitmap(MainActivity.pinBitmap);
-        /*Set the board_item object boardUri with the new boardUri.*/
-        pin.setImage(MainActivity.pinBitmap);
-
+        pinVideo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                /*https://stackoverflow.com/questions/3263736/playing-a-video-in-videoview-in-android*/
+                pinVideo.start();
+            }
+        });
+        
         if(tagList.size()>0) {
             tagListAdapter = new TagListAdapter(tagList);
             tagRecyclerView.setAdapter(tagListAdapter);

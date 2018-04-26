@@ -3,7 +3,6 @@ package com.example.personalpins.UI;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -11,12 +10,15 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.personalpins.DataBase;
 import com.example.personalpins.InteractionListener;
+import com.example.personalpins.Model.Board;
 import com.example.personalpins.Model.Pin;
 import com.example.personalpins.R;
 
@@ -35,8 +37,10 @@ public class PinListFragment extends Fragment {
     RecyclerView recyclerView;
     View view;
     DataBase db;
-    long boardId;
+    Board board;
     TextView noPins;
+    ImageView boardImage;
+    TextView boardTitle;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -46,11 +50,11 @@ public class PinListFragment extends Fragment {
     }
 
     /*Store the received data from main activity in the static field ARG.*/
-    public static PinListFragment newInstance(long boardId ,ArrayList<Pin> pinList) {
+    public static PinListFragment newInstance(Board board , ArrayList<Pin> pinList) {
         PinListFragment fragment = new PinListFragment();
         Bundle args = new Bundle();
         args.putParcelableArrayList(ARG1, pinList);
-        args.putLong(ARG2, boardId);
+        args.putParcelable(ARG2, board);
         fragment.setArguments(args);
         return fragment;
     }
@@ -63,7 +67,7 @@ public class PinListFragment extends Fragment {
         if (getArguments() != null) {
             /*Get the list of pins and board id to which the pin list corresponds to from static field.*/
             pinList = getArguments().getParcelableArrayList(ARG1);
-            boardId = getArguments().getLong(ARG2);
+            board = getArguments().getParcelable(ARG2);
         }
 
         db = new DataBase(getActivity());
@@ -78,6 +82,11 @@ public class PinListFragment extends Fragment {
         Log.d(TAG,"onCreateView");
         view = inflater.inflate(R.layout.pin_list_fragment, container, false);
         noPins = view.findViewById(R.id.noPins);
+        boardImage = view.findViewById(R.id.boardImage);
+        boardTitle = view.findViewById(R.id.boardTitle);
+
+        boardImage.setImageBitmap(board.getImage());
+        boardTitle.setText(board.getTitle());
 
         if(pinList.size()>0) {
             /*Create the adapter.*/
@@ -92,16 +101,6 @@ public class PinListFragment extends Fragment {
         }else{
             noPins.setVisibility(View.VISIBLE);
         }
-
-        /*Set the fab.*/
-        FloatingActionButton fab = (FloatingActionButton) view.findViewById(R.id.fab);
-        /*Notify main activity that fab is clicked.*/
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                listener.onPinListFragmentFabInteraction(true);
-            }
-        });
 
         return view;
     }
@@ -125,9 +124,13 @@ public class PinListFragment extends Fragment {
         super.onResume();
         Log.d(TAG,"onResume");
 
-        pinList = db.getPinList(boardId);
+        pinList = db.getPinList(board.getId());
 
         if(pinList.size()>0) {
+
+            for(Pin pin : pinList) {
+                Log.d(TAG, pin.getTitle());
+            }
                 /*Create the adapter.*/
             adapter = new PinListAdapter(pinList, listener);
             layoutManager = new GridLayoutManager(getActivity(), 2);
@@ -154,5 +157,21 @@ public class PinListFragment extends Fragment {
         Log.d(TAG,"onCreatOptionsMenu");
         /*Clear the menu from the previous fragment.*/
         menu.clear();
+        /*Inflate the new fragment menu from resource.*/
+        inflater.inflate(R.menu.pin_list_menu, menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()){
+            case R.id.photo:
+                listener.onPinListFragmentMenuInteraction("Photo");
+                return true;
+            case R.id.video:
+                listener.onPinListFragmentMenuInteraction("Video");
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 }

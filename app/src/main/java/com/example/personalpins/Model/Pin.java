@@ -10,7 +10,10 @@ import java.util.ArrayList;
 public class Pin implements Parcelable{
     long id;
     String title;
+    /*TODO: Make image type Uri.*/
     Bitmap image;
+    Uri video;
+//    File video;
     String boardId;
     ArrayList<Tag> tagList;
     ArrayList<Comment> commentList;
@@ -22,6 +25,7 @@ public class Pin implements Parcelable{
         id = in.readLong();
         title = in.readString();
         image = in.readParcelable(Uri.class.getClassLoader());
+        video = in.readParcelable(Uri.class.getClassLoader());
         boardId = in.readString();
     }
 
@@ -61,6 +65,14 @@ public class Pin implements Parcelable{
         this.image = image;
     }
 
+    public Uri getVideo() {
+        return video;
+    }
+
+    public void setVideo(Uri video) {
+        this.video = video;
+    }
+
     public String getBoardId() {
         return boardId;
     }
@@ -95,6 +107,7 @@ public class Pin implements Parcelable{
         parcel.writeLong(id);
         parcel.writeString(title);
         parcel.writeParcelable(image, i);
+        parcel.writeParcelable(video, i);
         parcel.writeString(boardId);
     }
 }

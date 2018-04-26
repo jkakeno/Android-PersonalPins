@@ -1,11 +1,13 @@
 package com.example.personalpins.UI;
 
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.VideoView;
 
 import com.example.personalpins.InteractionListener;
 import com.example.personalpins.Model.Pin;
@@ -16,8 +18,10 @@ import java.util.ArrayList;
 
 public class PinListAdapter extends RecyclerView.Adapter<PinListAdapter.ViewHolder> {
 
+    private static final String TAG = PinListAdapter.class.getSimpleName();
     private ArrayList<Pin> pinList;
     InteractionListener listener;
+    Pin pin;
 
     public PinListAdapter(ArrayList<Pin> pinList, InteractionListener listener) {
         this.pinList = pinList;
@@ -32,21 +36,44 @@ public class PinListAdapter extends RecyclerView.Adapter<PinListAdapter.ViewHold
     }
 
     @Override
-    public void onBindViewHolder(final ViewHolder holder, int position) {
+    public void onBindViewHolder(final ViewHolder holder, final int position) {
         holder.pinTitle.setText(pinList.get(position).getTitle());
 
-        final Pin pin = pinList.get(position);
+        /*TODO: Make grids same size.*/
 
-        /*Set the adapter holder view with the image boardUri.*/
-        holder.pinImage.setImageBitmap(pin.getImage());
+        pin = pinList.get(position);
+
+            if (pin.getImage()!=null) {
+                holder.pinImage.setVisibility(View.VISIBLE);
+                holder.pinVideo.setVisibility(View.INVISIBLE);
+                holder.pinImage.setImageBitmap(pin.getImage());
+                Log.d(TAG,"Image uri is: " + pin.getImage());
+            } else if (pin.getVideo()!=null) {
+                holder.pinImage.setVisibility(View.INVISIBLE);
+                holder.pinVideo.setVisibility(View.VISIBLE);
+                holder.pinVideo.setVideoURI(pin.getVideo());
+                Log.d(TAG,"Video uri is: " + pin.getVideo());
+//                holder.pinVideo.setVideoPath(pin.getVideo().getPath());
+                /*https://stackoverflow.com/questions/17079593/how-to-set-the-preview-image-in-videoview-before-playing*/
+                holder.pinVideo.pause();
+                holder.pinVideo.seekTo(100); // 100 milliseconds (0.1 s) into the clip.
+        }
 
         /*Notify the main activity of the board_item image clicked.*/
         holder.pinImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                listener.onPinListAdapterInteraction(pin);
+                listener.onPinListAdapterInteraction(pinList.get(position));
             }
         });
+        /*Notify the main activity of the board_item image clicked.*/
+        holder.pinVideo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                listener.onPinListAdapterInteraction(pinList.get(position));
+            }
+        });
+
     }
 
     @Override
@@ -58,14 +85,16 @@ public class PinListAdapter extends RecyclerView.Adapter<PinListAdapter.ViewHold
         }
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
+    public class ViewHolder extends RecyclerView.ViewHolder{
         public final TextView pinTitle;
         public final ImageView pinImage;
+        public final VideoView pinVideo;
 
         public ViewHolder(View view) {
             super(view);
             pinTitle = (TextView) view.findViewById(R.id.pinTitle);
             pinImage = (ImageView) view.findViewById(R.id.pinImage);
+            pinVideo = (VideoView) view.findViewById(R.id.pinVideo);
         }
     }
 }

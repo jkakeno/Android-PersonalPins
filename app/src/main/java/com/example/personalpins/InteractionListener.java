@@ -26,8 +26,8 @@ public interface InteractionListener {
     /*PinListAdapterInteraction method.*/
     void onPinListAdapterInteraction(Pin pin);
 
-    /*PinListFragmentFabInteraction method.*/
-    void onPinListFragmentFabInteraction(boolean isClicked);
+    /*PinListFragmentMenuInteraction method.*/
+    void onPinListFragmentMenuInteraction(String media);
 
     /*PinEditFragmentCancelInteraction method.*/
     void onPinEditCancelInteraction(boolean isClicked);

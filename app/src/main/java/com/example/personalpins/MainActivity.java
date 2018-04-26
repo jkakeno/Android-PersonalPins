@@ -11,6 +11,7 @@ import android.util.Log;
 import com.example.personalpins.Model.Board;
 import com.example.personalpins.Model.Pin;
 import com.example.personalpins.UI.BoardEditFragment;
+import com.example.personalpins.UI.PinDetailFragment;
 import com.example.personalpins.UI.PinEditFragment;
 import com.example.personalpins.UI.PinListFragment;
 import com.example.personalpins.UI.ViewPagerFragment;
@@ -30,15 +31,18 @@ public class MainActivity extends AppCompatActivity implements InteractionListen
     public static final int REQUEST_TAKE_VIDEO = 1;
     public static final int REQUEST_PICK_BOARD_PHOTO = 2;
     public static final int REQUEST_PICK_PIN_PHOTO = 3;
+    public static final int REQUEST_PICK_PIN_VIDEO = 4;
 
-    public static final int MEDIA_TYPE_IMAGE = 4;
-    public static final int MEDIA_TYPE_VIDEO = 5;
+    public static final int MEDIA_TYPE_IMAGE = 5;
+    public static final int MEDIA_TYPE_VIDEO = 6;
 
     /*Create a field to store the path to save the picture or video in the device.*/
-    public static Uri boardUri;
     public static Bitmap boardBitmap;
-    public static Uri pinUri;
+    public static Uri boardUri;
     public static Bitmap pinBitmap;
+    public static Uri pinUri;
+    public static Uri pinVideoUri;
+    public static String selectedMedia;
 
     ArrayList<Board> boardList;
     Board selectedBoard;
@@ -81,7 +85,8 @@ public class MainActivity extends AppCompatActivity implements InteractionListen
                         e.printStackTrace();
                     }
                 }
-            }else if(requestCode == REQUEST_PICK_PIN_PHOTO){
+            }
+            if(requestCode == REQUEST_PICK_PIN_PHOTO){
                 if(data !=null) {
                     pinUri = data.getData();
                     /*Store pin image bitmap.*/
@@ -91,7 +96,19 @@ public class MainActivity extends AppCompatActivity implements InteractionListen
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-                    Log.d(TAG,"pinUri = " + String.valueOf(boardUri));
+                    /*Start Pin_Edit_Fragment and pass the selected board.*/
+                    PinEditFragment pinEditFragment = PinEditFragment.newInstance(selectedBoard);
+                    getSupportFragmentManager().beginTransaction().replace(R.id.container, pinEditFragment).addToBackStack(null).commit();
+                }
+            }else if(requestCode == REQUEST_PICK_PIN_VIDEO){
+                if(data !=null){
+                    pinVideoUri=data.getData();
+                    /*Persist permission to open uri files after app is restarted:
+                    * http://www.andreamaglie.com/2015/access-storage-framework-uri-permission/
+                    * https://stackoverflow.com/questions/19837358/android-kitkat-securityexception-when-trying-to-read-from-mediastore*/
+//                    this.grantUriPermission(this.getPackageName(), pinVideoUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+//                    final int takeFlags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION| Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+//                    this.getContentResolver().takePersistableUriPermission(pinVideoUri, takeFlags);
                     /*Start Pin_Edit_Fragment and pass the selected board.*/
                     PinEditFragment pinEditFragment = PinEditFragment.newInstance(selectedBoard);
                     getSupportFragmentManager().beginTransaction().replace(R.id.container, pinEditFragment).addToBackStack(null).commit();
@@ -99,6 +116,7 @@ public class MainActivity extends AppCompatActivity implements InteractionListen
             }
         }
     }
+
 
     @Override
     public void onBoardListFragmentFabInteraction(boolean isClicked) {
@@ -111,17 +129,23 @@ public class MainActivity extends AppCompatActivity implements InteractionListen
     @Override
     public void onBoardEditBoardImageInteraction(boolean isClicked) {
         if(isClicked){
-            /*Start activity for result with request code. Get the data of the result to set board_item boardUri.*/
             Log.d(TAG,"Board Image clicked");
+            /*Start activity for result with request code and set the board image with the selected image.*/
             Intent pickPhotoIntent = new Intent(Intent.ACTION_GET_CONTENT);
             pickPhotoIntent.setType("image/*");
             startActivityForResult(pickPhotoIntent, REQUEST_PICK_BOARD_PHOTO);
         }else{
-            /*Set board_item boardUri with fixed boardUri.*/
             Log.d(TAG,"Board Image not clicked");
+            /*Set default board image with fixed image.*/
             /*https://stackoverflow.com/questions/4896223/how-to-get-an-uri-of-an-image-resource-in-android/38340580*/
             boardUri = Uri.parse("android.resource://com.example.personalpins/" + R.drawable.ic_action_camera_roll);
-            Log.d(TAG, String.valueOf(boardUri));
+            /*Store board image bitmap.*/
+            /*https://stackoverflow.com/questions/3879992/how-to-get-bitmap-from-an-uri*/
+            try {
+                boardBitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(),boardUri);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -147,27 +171,37 @@ public class MainActivity extends AppCompatActivity implements InteractionListen
         Log.d(TAG,"Board selected is: " +selectedBoard.getTitle());
         this.selectedBoard = selectedBoard;
 
-        long selectedBoardId = selectedBoard.getId();
+//        long selectedBoardId = selectedBoard.getId();
         ArrayList<Pin> pinList =selectedBoard.getPinList();
 
         /*Start PinListFragment and pass the selected board id and its list of pins.*/
-        PinListFragment pinListFragment = PinListFragment.newInstance(selectedBoardId,pinList);
+        PinListFragment pinListFragment = PinListFragment.newInstance(selectedBoard,pinList);
         getSupportFragmentManager().beginTransaction().replace(R.id.container, pinListFragment).addToBackStack(null).commit();
     }
 
     @Override
     public void onPinListAdapterInteraction(Pin pin) {
-        Log.d(TAG,"Pin selected is: " +pin.getTitle());
-        /*TODO:Start PinFragment.*/
+        /*Start PinDetailFragment pass the selected pin.*/
+        PinDetailFragment pinDetailFragment = PinDetailFragment.newInstance(pin);
+        getSupportFragmentManager().beginTransaction().replace(R.id.container, pinDetailFragment).addToBackStack(null).commit();
     }
 
     @Override
-    public void onPinListFragmentFabInteraction(boolean isClicked) {
-        Log.d(TAG, "PinListFragment FAB pressed");
-
-        Intent pickPhotoIntent = new Intent(Intent.ACTION_GET_CONTENT);
-        pickPhotoIntent.setType("image/*");
-        startActivityForResult(pickPhotoIntent, REQUEST_PICK_PIN_PHOTO);
+    public void onPinListFragmentMenuInteraction(String media) {
+        selectedMedia=media;
+        Log.d(TAG, "Media selected: " +media);
+        if (media.equals("Photo")) {
+            /* Open files:
+            * https://developer.android.com/guide/topics/providers/document-provider
+            * https://developer.android.com/reference/android/content/Intent#action_open_document*/
+            Intent pickPhotoIntent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+            pickPhotoIntent.setType("image/*");
+            startActivityForResult(pickPhotoIntent, REQUEST_PICK_PIN_PHOTO);
+        } else if(media.equals("Video")){
+            Intent pickVideoIntent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+            pickVideoIntent.setType("video/*");
+            startActivityForResult(pickVideoIntent, REQUEST_PICK_PIN_VIDEO);
+        }
     }
 
     @Override
@@ -180,7 +214,6 @@ public class MainActivity extends AppCompatActivity implements InteractionListen
     public void onPinEditSaveInteraction(Pin pin) {
         /*Send the saved pin to the database.*/
         db.insertPin(pin);
-        Log.d(TAG, "New pin was added: " + pin.getTitle());
 
         /*Get the previous fragment back to display.*/
         getSupportFragmentManager().popBackStackImmediate();
@@ -190,5 +223,14 @@ public class MainActivity extends AppCompatActivity implements InteractionListen
     public void onCameraIconInteraction(boolean isClicked) {
         /*TODO:Start media activity to take a picture or video.*/
         Log.d(TAG, "Camera icon pressed");
+    }
+
+    /*This method deletes old instance states sent from the activity to the system to save memory space and prevent "TransactionTooLargeExceptions".
+    * This can happen when sending bitmaps within bundle.*/
+    /*https://stackoverflow.com/questions/39098590/android-os-transactiontoolargeexception-on-nougat%5D*/
+    @Override
+    protected void onSaveInstanceState(Bundle oldInstanceState) {
+        super.onSaveInstanceState(oldInstanceState);
+        oldInstanceState.clear();
     }
 }

@@ -11,4 +11,6 @@
     <string name="pin_title">Pin Title</string>
     <string name="tags">Tags</string>
     <string name="enter">+</string>
+    <string name="tag">Tag:</string>
+    <string name="comment">Comment:</string>
 </resources>

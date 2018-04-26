@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.provider.BaseColumns;
 import android.util.Log;
 
@@ -29,6 +30,7 @@ public class DataBase extends SQLiteOpenHelper {
     public static final String TABLE_PIN="PinTable";
     public static final String COL_PIN_TITLE="PinTitle";
     public static final String COL_PIN_IMAGE= "PinImage";
+    public static final String COL_PIN_VIDEO= "PinVideo";
     public static final String COL_PIN_FOREIGN_KEY="PinForeignKey";
     public static final String TABLE_TAG="TagTable";
     public static final String COL_TAG="Tag";
@@ -44,11 +46,18 @@ public class DataBase extends SQLiteOpenHelper {
     /*Image store and retrieve:
     * https://stackoverflow.com/questions/11790104/how-to-storebitmap-image-and-retrieve-image-from-sqlite-database-in-android*/
 
+    /*Don't store blobs of 500KB in your database.
+    * https://stackoverflow.com/questions/22005248/store-video-on-sqlite-database-or-sdcard-android*/
+
+    /*Convert File to [] and vise versa.
+     * https://stackoverflow.com/questions/6828634/write-byte-to-file-in-java */
+
     @Override
     public void onCreate(SQLiteDatabase db) {
         Log.d(TAG, "onCreate");
         String createBoardTable = "CREATE TABLE " + TABLE_BOARD + "( " + BaseColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " + COL_BOARD_TITLE + " TEXT, " + COL_BOARD_IMAGE + " BLOB )";
-        String createPinTable = "CREATE TABLE " + TABLE_PIN + "( " + BaseColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " + COL_PIN_TITLE + " TEXT, " + COL_PIN_IMAGE + " BLOB, " + COL_PIN_FOREIGN_KEY +" TEXT )";
+//        String createPinTable = "CREATE TABLE " + TABLE_PIN + "( " + BaseColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " + COL_PIN_TITLE + " TEXT, " + COL_PIN_IMAGE + " BLOB, " +COL_PIN_VIDEO + " TEXT, " + COL_PIN_FOREIGN_KEY +" TEXT )";
+        String createPinTable = "CREATE TABLE " + TABLE_PIN + "( " + BaseColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " + COL_PIN_TITLE + " TEXT, " + COL_PIN_IMAGE + " BLOB, " +COL_PIN_VIDEO + " TEXT, " + COL_PIN_FOREIGN_KEY +" TEXT )";
         String createTagTable = "CREATE TABLE " + TABLE_TAG + "( " + BaseColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " + COL_TAG + " TEXT, " + COL_TAG_FOREIGN_KEY + " TEXT )";
         String createCommentTable = "CREATE TABLE " + TABLE_COMMENT + "( " + BaseColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " + COL_COMMENT + " TEXT, " + COL_COMMENT_FOREIGN_KEY + " TEXT )";
 
@@ -100,61 +109,64 @@ public class DataBase extends SQLiteOpenHelper {
 
     public void insertPin (Pin pin){
         String pinTitle = pin.getTitle();
-        /*Get the image bitmap from the object.*/
-        Bitmap pinBitmap = pin.getImage();
-        /*Convert bitmap to byte array.*/
-        byte [] pinImage = getBytes(pinBitmap);
         String boardId = pin.getBoardId();
-        long pinId = pin.getId();
+//        long pinId = pin.getId();
         ArrayList<Tag> tagList = pin.getTagList();
         ArrayList<Comment> commentList = pin.getCommentList();
-
-        if(tagList!=null) {
-            insertTag(tagList, pinId);
-        }
-        if(commentList!=null) {
-            insertComment(commentList, pinId);
-        }
 
         SQLiteDatabase db= this.getWritableDatabase();
         db.beginTransaction();
         ContentValues values = new ContentValues();
         values.put(COL_PIN_TITLE,pinTitle);
         /*Store byte array.*/
-        values.put(COL_PIN_IMAGE,pinImage);
+        if(pin.getImage()!=null) {
+            Bitmap pinBitmap = pin.getImage();
+            /*Convert bitmap to byte array.*/
+            byte [] pinImage = getBytes(pinBitmap);
+            values.put(COL_PIN_IMAGE, pinImage);
+        }
+        if(pin.getVideo()!=null) {
+            Uri pinVideo = pin.getVideo();
+//            File pinVideoFile = pin.getVideo();
+//            byte [] pinVideo = getFileBytes(pinVideoFile);
+            values.put(COL_PIN_VIDEO, pinVideo.toString());
+//            values.put(COL_PIN_VIDEO, pinVideo);
+        }
         values.put(COL_PIN_FOREIGN_KEY, boardId);
-        db.insert(TABLE_PIN,null,values);
+
+        /*Insert the pin into the data base and get the assigned id at the same time.*/
+        long pinId = db.insertWithOnConflict(TABLE_PIN,null,values,SQLiteDatabase.CONFLICT_REPLACE);
+
+        if(tagList!=null) {
+            /*Pass the pin id as the foreign key.*/
+            insertTag(tagList, pinId, db);
+        }
+        if(commentList!=null) {
+            /*Pass the pin id as the foreign key.*/
+            insertComment(commentList, pinId, db);
+        }
+
         db.setTransactionSuccessful();
         db.endTransaction();
         db.close();
     }
 
-    public void insertTag (ArrayList<Tag> tagList, long pinId){
-        SQLiteDatabase db= this.getWritableDatabase();
-        db.beginTransaction();
+    public void insertTag (ArrayList<Tag> tagList, long pinId, SQLiteDatabase db){
         ContentValues values = new ContentValues();
         for(Tag tag: tagList) {
             values.put(COL_TAG, tag.getTag());
             values.put(COL_TAG_FOREIGN_KEY, pinId);
+            db.insert(TABLE_TAG,null,values);
         }
-        db.insert(TABLE_TAG,null,values);
-        db.setTransactionSuccessful();
-        db.endTransaction();
-        db.close();
     }
 
-    public void insertComment (ArrayList<Comment> commentList, long pinId){
-        SQLiteDatabase db= this.getWritableDatabase();
-        db.beginTransaction();
+    public void insertComment (ArrayList<Comment> commentList, long pinId, SQLiteDatabase db){
         ContentValues values = new ContentValues();
         for(Comment comment:commentList) {
             values.put(COL_COMMENT, comment.getComment());
             values.put(COL_COMMENT_FOREIGN_KEY, pinId);
+            db.insert(TABLE_COMMENT,null,values);
         }
-        db.insert(TABLE_COMMENT,null,values);
-        db.setTransactionSuccessful();
-        db.endTransaction();
-        db.close();
     }
 
     public ArrayList<Board> getBoardList(){
@@ -188,6 +200,7 @@ public class DataBase extends SQLiteOpenHelper {
     public ArrayList<Pin> getPinList(long boardId){
         ArrayList<Pin> pinList = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
+        db.beginTransaction();
         Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_PIN + " WHERE " + COL_PIN_FOREIGN_KEY + " = " + boardId + " ORDER BY " + BaseColumns._ID + " ASC", null);
         if(cursor.moveToFirst()){
             do{
@@ -195,24 +208,36 @@ public class DataBase extends SQLiteOpenHelper {
                 String pinTitle = cursor.getString(cursor.getColumnIndex(COL_PIN_TITLE));
                 /*Get image byte array from data base.*/
                 byte[] pinImage = cursor.getBlob(cursor.getColumnIndex(COL_PIN_IMAGE));
-                /*Convert byte array to bitmap.*/
-                Bitmap pinBitmap = getImage(pinImage);
+                String pinVideo = cursor.getString(cursor.getColumnIndex(COL_PIN_VIDEO));
+//                byte[] pinVideo = cursor.getBlob(cursor.getColumnIndex(COL_PIN_VIDEO));
+
                 Pin pin = new Pin();
                 pin.setId(pinId);
                 pin.setTitle(pinTitle);
                 /*Set the object image with the bitmap.*/
-                pin.setImage(pinBitmap);
-                pin.setTagList(getTagList(pinId));
-                pin.setCommentList(getCommentList(pinId));
+                if(pinImage!=null) {
+                    /*Convert byte array to bitmap.*/
+                    Bitmap pinBitmap = getImage(pinImage);
+                    pin.setImage(pinBitmap);
+                }
+                if(pinVideo!=null) {
+                    pin.setVideo(Uri.parse(pinVideo));
+//                    File pinVideoFile = getFile(pinVideo);
+//                    pin.setVideo(pinVideoFile);
+                }
+                pin.setTagList(getTagList(pinId,db));
+                pin.setCommentList(getCommentList(pinId,db));
                 pinList.add(pin);
             }while(cursor.moveToNext());
         }
+        db.setTransactionSuccessful();
+        db.endTransaction();
+        db.close();
         return pinList;
     }
 
-    public ArrayList<Tag> getTagList(long pinId) {
+    public ArrayList<Tag> getTagList(long pinId, SQLiteDatabase db) {
         ArrayList<Tag> tagList = new ArrayList<>();
-        SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_TAG + " WHERE " + COL_TAG_FOREIGN_KEY + " = " + pinId + " ORDER BY " + BaseColumns._ID + " ASC", null);
         if(cursor.moveToFirst()){
             do{
@@ -225,9 +250,8 @@ public class DataBase extends SQLiteOpenHelper {
         return tagList;
     }
 
-    public ArrayList<Comment> getCommentList(long pinId) {
+    public ArrayList<Comment> getCommentList(long pinId, SQLiteDatabase db) {
         ArrayList<Comment> commentList = new ArrayList<>();
-        SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_COMMENT + " WHERE " + COL_COMMENT_FOREIGN_KEY + " = " + pinId + " ORDER BY " + BaseColumns._ID + " ASC", null);
         if(cursor.moveToFirst()){
             do{
