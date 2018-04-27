@@ -36,7 +36,7 @@ public class PinSearchAdapter extends RecyclerView.Adapter<PinSearchAdapter.View
         holder.pinTitle.setText(searchQuery.get(position));
 
         Picasso.with(holder.pinImage.getContext())
-                .load(R.drawable.ic_action_camera_roll)
+                .load(R.drawable.ic_board_image_default)
                 .fit()
                 .centerCrop()
                 .into(holder.pinImage);

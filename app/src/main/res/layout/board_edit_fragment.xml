@@ -32,7 +32,7 @@
 
         <ImageView
             android:id="@+id/boardImage"
-            android:src="@drawable/ic_action_camera_roll"
+            android:src="@drawable/ic_board_image_default"
             android:layout_width="match_parent"
             android:layout_height="200sp"/>
 

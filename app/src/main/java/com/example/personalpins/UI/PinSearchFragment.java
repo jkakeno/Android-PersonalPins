@@ -36,7 +36,7 @@ public class PinSearchFragment extends Fragment {
     public PinSearchFragment() {
     }
 
-    // TODO: Get the pins from main activity
+    // TODO: Get the list of pins from main activity
     public static PinSearchFragment newInstance(int columnCount) {
         PinSearchFragment fragment = new PinSearchFragment();
         Bundle args = new Bundle();

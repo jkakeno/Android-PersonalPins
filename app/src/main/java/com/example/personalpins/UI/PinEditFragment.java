@@ -3,6 +3,7 @@ package com.example.personalpins.UI;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -58,6 +59,9 @@ public class PinEditFragment extends Fragment{
     ImageButton commentBtn;
     Board board;
     VideoView pinVideo;
+    ImageView pinVideoView;
+    ImageView playBtn;
+    boolean titleEntered;
 
 
     public PinEditFragment() {
@@ -86,6 +90,8 @@ public class PinEditFragment extends Fragment{
             board = getArguments().getParcelable(ARG);
         }
 
+        titleEntered=false;
+
     }
 
     @Nullable
@@ -105,6 +111,10 @@ public class PinEditFragment extends Fragment{
         tagRecyclerView = view.findViewById(R.id.tag_recycler_view);
         commentRecyclerView = view.findViewById(R.id.comment_recycler_view);
         pinVideo = view.findViewById(R.id.pinVideo);
+        /*This field is transparent on top of pinVideo so be able to use onClickListener.
+        * Because using onTouchListener directly on VideoView detected multiple touches.*/
+        pinVideoView = view.findViewById(R.id.pinVideoView);
+        playBtn = view.findViewById(R.id.playBtn);
 
         pin.setBoardId(String.valueOf(board.getId()));
 
@@ -112,12 +122,14 @@ public class PinEditFragment extends Fragment{
         if(MainActivity.selectedMedia.equals("Photo")){
             pinImage.setVisibility(View.VISIBLE);
             pinVideo.setVisibility(View.INVISIBLE);
+            playBtn.setVisibility(View.INVISIBLE);
             pinImage.setImageBitmap(MainActivity.pinBitmap);
             /*Set the board_item object boardUri with the default boardUri.*/
             pin.setImage(MainActivity.pinBitmap);
         }else if(MainActivity.selectedMedia.equals("Video")){
             pinImage.setVisibility(View.INVISIBLE);
             pinVideo.setVisibility(View.VISIBLE);
+            playBtn.setVisibility(View.INVISIBLE);
             pinVideo.setVideoURI(MainActivity.pinVideoUri);
             /*https://stackoverflow.com/questions/3263736/playing-a-video-in-videoview-in-android*/
             pinVideo.start();
@@ -143,6 +155,7 @@ public class PinEditFragment extends Fragment{
                 pin.setTitle(pinTitle.getText().toString());
                 /*Dismiss the keyboard.*/
                 imgr.hideSoftInputFromWindow(pinTitle.getWindowToken(), 0);
+                titleEntered = true;
             }
         });
 
@@ -168,7 +181,7 @@ public class PinEditFragment extends Fragment{
                 /*Request cursor focus on the edit text so that user can start typing as soon as fragment is opened.*/
                 editText.requestFocus();
 
-                dialogBuilder.setPositiveButton("Done", new DialogInterface.OnClickListener() {
+                dialogBuilder.setPositiveButton("Save", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
 
                         /*Set the tag and add it to the list of tags.*/
@@ -275,10 +288,10 @@ public class PinEditFragment extends Fragment{
         save.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(pinTitle.getText().toString().trim().equals("")){
-                    Toast.makeText(getActivity(),"Enter a pin title...", Toast.LENGTH_SHORT).show();
-                }else {
+                if(!pinTitle.getText().toString().isEmpty() && titleEntered){
                     listener.onPinEditSaveInteraction(pin);
+                }else{
+                    Toast.makeText(getActivity(),"Enter a title and press + ...", Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -306,26 +319,51 @@ public class PinEditFragment extends Fragment{
         if(MainActivity.selectedMedia.equals("Photo")){
             pinImage.setVisibility(View.VISIBLE);
             pinVideo.setVisibility(View.INVISIBLE);
+            playBtn.setVisibility(View.INVISIBLE);
             pinImage.setImageBitmap(MainActivity.pinBitmap);
             /*Set the board_item object boardUri with the new boardUri.*/
             pin.setImage(MainActivity.pinBitmap);
         }else if(MainActivity.selectedMedia.equals("Video")){
             pinImage.setVisibility(View.INVISIBLE);
             pinVideo.setVisibility(View.VISIBLE);
+            playBtn.setVisibility(View.INVISIBLE);
             pinVideo.setVideoURI(MainActivity.pinVideoUri);
-            /*https://stackoverflow.com/questions/17079593/how-to-set-the-preview-image-in-videoview-before-playing*/
-            pinVideo.pause();
-            pinVideo.seekTo(100); // 100 milliseconds (0.1 s) into the clip.
+            /*https://stackoverflow.com/questions/3263736/playing-a-video-in-videoview-in-android*/
+            pinVideo.start();
             /*Set the board_item object boardUri with the default boardUri.*/
 //            pin.setVideo(MainActivity.pinUri);
             pin.setVideo(MainActivity.pinVideoUri);
         }
 
-        pinVideo.setOnClickListener(new View.OnClickListener() {
+        pinImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                /*https://stackoverflow.com/questions/3263736/playing-a-video-in-videoview-in-android*/
-                pinVideo.start();
+                /*Hide the keyboard.*/
+                imgr.hideSoftInputFromWindow(pinTitle.getWindowToken(), 0);
+            }
+        });
+
+        pinVideoView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                /*Hide the keyboard.*/
+                imgr.hideSoftInputFromWindow(pinTitle.getWindowToken(), 0);
+
+                if(pinVideo.isPlaying()){
+                    pinVideo.pause();
+                    playBtn.setVisibility(View.VISIBLE);
+                }else {
+                    pinVideo.start();
+                    playBtn.setVisibility(View.INVISIBLE);
+                }
+
+            }
+        });
+
+        pinVideo.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mediaPlayer) {
+                playBtn.setVisibility(View.VISIBLE);
             }
         });
         

@@ -26,6 +26,7 @@ public class BoardEditFragment extends Fragment{
     Board board;
     ImageView boardImage;
     InputMethodManager imgr;
+    boolean titleEntered;
 
     public BoardEditFragment() {
     }
@@ -37,6 +38,8 @@ public class BoardEditFragment extends Fragment{
 
         /*Create a new board_item object.*/
         board = new Board();
+
+        titleEntered=false;
 
     }
 
@@ -67,6 +70,7 @@ public class BoardEditFragment extends Fragment{
                 board.setTitle(boardTitle.getText().toString());
                 /*Dismiss the keyboard.*/
                 imgr.hideSoftInputFromWindow(boardTitle.getWindowToken(), 0);
+                titleEntered = true;
             }
         });
 
@@ -83,6 +87,8 @@ public class BoardEditFragment extends Fragment{
         boardImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                /*Hide the keyboard.*/
+                imgr.hideSoftInputFromWindow(boardTitle.getWindowToken(), 0);
                 listener.onBoardEditBoardImageInteraction(true);
 
             }
@@ -100,10 +106,10 @@ public class BoardEditFragment extends Fragment{
         save.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if(boardTitle.getText().toString().trim().equals("")){
-                    Toast.makeText(getActivity(),"Enter a board title...", Toast.LENGTH_SHORT).show();
-                }else {
+                if(!boardTitle.getText().toString().isEmpty() && titleEntered){
                     listener.onBoardEditSaveInteraction(board);
+                }else{
+                    Toast.makeText(getActivity(),"Enter a title and press + ...", Toast.LENGTH_SHORT).show();
                 }
             }
         });

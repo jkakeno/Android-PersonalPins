@@ -23,8 +23,7 @@ public class ViewPagerFragment extends Fragment {
     public ViewPagerFragment() {
     }
 
-    /*TODO: Implement constructor to parcelable receive board_item list from main activity.*/
-        /*Store the received data from main activity in the static field ARG.*/
+    /*Store the received data from main activity in the static field ARG.*/
     public static ViewPagerFragment newInstance(ArrayList<Board> boardList) {
         ViewPagerFragment fragment = new ViewPagerFragment();
         Bundle args = new Bundle();
@@ -38,7 +37,7 @@ public class ViewPagerFragment extends Fragment {
         super.onCreate(savedInstanceState);
 
         if (getArguments() != null) {
-            /*TODO: Get the list of boards from static field.*/
+            /*Get the list of boards from static field.*/
             boardList = getArguments().getParcelableArrayList(ARG);
         }
 
@@ -53,8 +52,7 @@ public class ViewPagerFragment extends Fragment {
 
         /*Create the fragments for the view pager.*/
         final PinSearchFragment searchFragment = new PinSearchFragment();
-        /*TODO:Instantiate BoradFragment.newInstance() and pass the boardList.*/
-//        final BoardFragment boardFragment = new BoardFragment();
+        /*Instantiate BoradFragment.newInstance() and pass the boardList.*/
         final BoardListFragment boardFragment = BoardListFragment.newInstance(boardList);
 
         /*Set the view pager.*/

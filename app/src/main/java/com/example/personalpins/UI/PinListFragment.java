@@ -128,9 +128,9 @@ public class PinListFragment extends Fragment {
 
         if(pinList.size()>0) {
 
-            for(Pin pin : pinList) {
-                Log.d(TAG, pin.getTitle());
-            }
+//            for(Pin pin : pinList) {
+//                Log.d(TAG, pin.getTitle());
+//            }
                 /*Create the adapter.*/
             adapter = new PinListAdapter(pinList, listener);
             layoutManager = new GridLayoutManager(getActivity(), 2);

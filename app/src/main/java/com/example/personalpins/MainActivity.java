@@ -4,9 +4,12 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.example.personalpins.Model.Board;
 import com.example.personalpins.Model.Pin;
@@ -16,8 +19,11 @@ import com.example.personalpins.UI.PinEditFragment;
 import com.example.personalpins.UI.PinListFragment;
 import com.example.personalpins.UI.ViewPagerFragment;
 
+import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 /*This app allows users to organize their photos and videos in collections.
 The user can add comments or tags to each photo or video.
@@ -61,7 +67,7 @@ public class MainActivity extends AppCompatActivity implements InteractionListen
         /*Set the action bar logo.
         * http://www.vogella.com/tutorials/AndroidActionBar/article.html*/
         getSupportActionBar().setDisplayShowHomeEnabled(true);
-        getSupportActionBar().setLogo(R.drawable.ic_action_camera_roll);
+        getSupportActionBar().setLogo(R.drawable.ic_camera_roll_taskbar);
         getSupportActionBar().setDisplayUseLogoEnabled(true);
 
         /*Instantiate ViewPagerFragment.newInstance() and pass the boardList.*/
@@ -138,7 +144,7 @@ public class MainActivity extends AppCompatActivity implements InteractionListen
             Log.d(TAG,"Board Image not clicked");
             /*Set default board image with fixed image.*/
             /*https://stackoverflow.com/questions/4896223/how-to-get-an-uri-of-an-image-resource-in-android/38340580*/
-            boardUri = Uri.parse("android.resource://com.example.personalpins/" + R.drawable.ic_action_camera_roll);
+            boardUri = Uri.parse("android.resource://com.example.personalpins/" + R.drawable.ic_board_image_default);
             /*Store board image bitmap.*/
             /*https://stackoverflow.com/questions/3879992/how-to-get-bitmap-from-an-uri*/
             try {
@@ -181,9 +187,16 @@ public class MainActivity extends AppCompatActivity implements InteractionListen
 
     @Override
     public void onPinListAdapterInteraction(Pin pin) {
+        Log.d(TAG,"Pin is: " + pin.getTitle());
         /*Start PinDetailFragment pass the selected pin.*/
         PinDetailFragment pinDetailFragment = PinDetailFragment.newInstance(pin);
         getSupportFragmentManager().beginTransaction().replace(R.id.container, pinDetailFragment).addToBackStack(null).commit();
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        Log.d(TAG,"Back pressed.");
     }
 
     @Override
@@ -221,8 +234,20 @@ public class MainActivity extends AppCompatActivity implements InteractionListen
 
     @Override
     public void onCameraIconInteraction(boolean isClicked) {
-        /*TODO:Start media activity to take a picture or video.*/
         Log.d(TAG, "Camera icon pressed");
+
+        pinUri = getOutputMediaFileUri(MEDIA_TYPE_IMAGE);
+
+        if(pinUri == null){
+            Toast.makeText(this,"Something is wrong with your device's external storage.", Toast.LENGTH_SHORT).show();
+        }else{
+            /*Start the camera.*/
+            Intent takePhotoIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            /*Put the image capture in the extra.*/
+            takePhotoIntent.putExtra(MediaStore.EXTRA_OUTPUT, pinUri);
+            /*Request action from the camera.*/
+            startActivityForResult(takePhotoIntent, REQUEST_TAKE_PHOTO);
+        }
     }
 
     /*This method deletes old instance states sent from the activity to the system to save memory space and prevent "TransactionTooLargeExceptions".
@@ -232,5 +257,58 @@ public class MainActivity extends AppCompatActivity implements InteractionListen
     protected void onSaveInstanceState(Bundle oldInstanceState) {
         super.onSaveInstanceState(oldInstanceState);
         oldInstanceState.clear();
+    }
+
+    private Uri getOutputMediaFileUri(int mediaType) {
+        /*TODO: Set the file directory to Images not Internal Storage.*/
+        /*https://stackoverflow.com/questions/20523658/how-to-create-application-specific-folder-in-android-gallery*/
+
+        /*Check for external storage.*/
+        if(isExternalStorageAvailable()){
+            /*Get the URI.*/
+            /* 1. Get the external storage directory.*/
+            File mediaStorageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+
+            /* 2. Create a unique file name.*/
+            String fileName = "";
+            String fileType = "";
+            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+
+            if (mediaType == MEDIA_TYPE_IMAGE) {
+                fileName = "IMG_"+ timeStamp;
+                fileType = ".jpg";
+            } else if(mediaType == MEDIA_TYPE_VIDEO) {
+                fileName = "VID_"+ timeStamp;
+                fileType = ".mp4";
+            } else {
+                return null;
+            }
+
+            /* 3. Create the file.*/
+            File mediaFile;
+            try {
+                mediaFile = File.createTempFile(fileName, fileType, mediaStorageDir);
+                Log.d(TAG, "File: " + Uri.fromFile(mediaFile));
+
+            /* 4. Return the file's URI (the path in the device where the file is created).*/
+//                return Uri.fromFile(mediaFile);
+            /*Replace with this return if target api >= 24 .
+            * https://inthecheesefactory.com/blog/how-to-share-access-to-file-with-fileprovider-on-android-nougat/en*/
+                return FileProvider.getUriForFile(MainActivity.this,BuildConfig.APPLICATION_ID + ".provider" , mediaFile);
+            } catch (IOException e){
+                Log.d(TAG, "Error creating file: " + mediaStorageDir.getAbsolutePath() + fileName + fileType);
+            }
+        }
+        /*Something went wrong.*/
+        return null;
+    }
+
+    private boolean isExternalStorageAvailable(){
+        String state = Environment.getExternalStorageState();
+        if(Environment.MEDIA_MOUNTED.equals(state)){
+            return true;
+        }else{
+            return false;
+        }
     }
 }

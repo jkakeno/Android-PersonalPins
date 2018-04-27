@@ -48,23 +48,39 @@
             android:clickable="true"
             android:focusable="true"/>
 
+        <ImageView
+            android:id="@+id/pinVideoView"
+            android:layout_width="match_parent"
+            android:layout_height="200dp"
+            android:background="@android:color/transparent"/>
+
+        <ImageView
+            android:id="@+id/playBtn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:src="@drawable/ic_play_circle_outline"/>
+
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
             android:layout_alignBottom="@+id/pinImage">
             <ImageButton
+                android:id="@+id/tag"
+                android:src="@drawable/ic_tag"
+                android:background="@android:color/transparent"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="5dp"/>
+            <ImageButton
                 android:id="@+id/comment"
                 android:src="@drawable/ic_comment"
                 android:background="@android:color/transparent"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
-            <ImageButton
-                android:id="@+id/tag"
-                android:src="@drawable/ic_turned_in_not"
-                android:background="@android:color/transparent"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"/>
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="5dp"/>
         </LinearLayout>
     </RelativeLayout>
     <LinearLayout

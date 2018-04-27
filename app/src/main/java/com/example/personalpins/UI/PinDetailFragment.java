@@ -42,6 +42,7 @@ public class PinDetailFragment extends Fragment{
     TextView pinTitle;
     VideoView pinVideo;
     ImageView playBtn;
+    ImageView pinVideoView;
 
 
     public PinDetailFragment() {
@@ -90,6 +91,9 @@ public class PinDetailFragment extends Fragment{
         commentRecyclerView = view.findViewById(R.id.comment_recycler_view);
         pinVideo = view.findViewById(R.id.pinVideo);
         playBtn = view.findViewById(R.id.playBtn);
+        /*This field is transparent on top of pinVideo so be able to use onClickListener.
+        * Because using onTouchListener directly on VideoView detected multiple touches.*/
+        pinVideoView = view.findViewById(R.id.pinVideoView);
 
         pinTitle.setText(pin.getTitle());
 
@@ -108,11 +112,16 @@ public class PinDetailFragment extends Fragment{
             /*https://stackoverflow.com/questions/3263736/playing-a-video-in-videoview-in-android*/
             pinVideo.start();
 
-            pinVideo.setOnClickListener(new View.OnClickListener() {
+            pinVideoView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    pinVideo.start();
-                    playBtn.setVisibility(View.INVISIBLE);
+                    if(pinVideo.isPlaying()){
+                        pinVideo.pause();
+                        playBtn.setVisibility(View.VISIBLE);
+                    }else {
+                        pinVideo.start();
+                        playBtn.setVisibility(View.INVISIBLE);
+                    }
                 }
             });
 
@@ -147,6 +156,8 @@ public class PinDetailFragment extends Fragment{
         return view;
     }
 
+
+
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
@@ -171,5 +182,6 @@ public class PinDetailFragment extends Fragment{
         super.onDetach();
         Log.d(TAG,"onDetach");
         listener = null;
+//        getActivity().getSupportFragmentManager().popBackStack();
     }
 }
