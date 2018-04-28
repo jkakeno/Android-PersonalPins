@@ -37,8 +37,8 @@ public class PinEditFragment extends Fragment{
     private static final String TAG = PinEditFragment.class.getSimpleName();
     private static final String ARG = "board";
     InteractionListener listener;
+    Board board;
     Pin pin;
-    ImageView pinImage;
     Tag tag;
     Comment comment;
     ArrayList<Tag> tagList;
@@ -47,23 +47,28 @@ public class PinEditFragment extends Fragment{
     RecyclerView commentRecyclerView;
     TagListAdapter tagListAdapter;
     CommentListAdapter commentListAdapter;
+    InputMethodManager imgr;
+
     View view;
+    ImageView pinImage;
+    ImageView pinVideoView;
+    ImageView playBtn;
+    VideoView pinVideo;
     TextView noTags;
     TextView noComments;
-    InputMethodManager imgr;
     EditText pinTitle;
     Button cancel;
     Button save;
     Button enter;
     ImageButton tagBtn;
     ImageButton commentBtn;
-    Board board;
-    VideoView pinVideo;
-    ImageView pinVideoView;
-    ImageView playBtn;
+
     boolean titleEntered;
 
-
+    /**
+     * Mandatory empty constructor for the fragment manager to instantiate the
+     * fragment (e.g. upon screen orientation changes).
+     */
     public PinEditFragment() {
     }
 
@@ -81,15 +86,19 @@ public class PinEditFragment extends Fragment{
         super.onCreate(savedInstanceState);
         Log.d(TAG,"onCreate");
 
-        /*Create a new board_item object.*/
+        /*Create a new pin object.*/
         pin = new Pin();
+        /*Create an empty tag list.*/
         tagList = new ArrayList<>();
+        /*Create an empty comment list.*/
         commentList = new ArrayList<>();
 
         if (getArguments() != null) {
+            /*Get the data from static field ARG.*/
             board = getArguments().getParcelable(ARG);
         }
 
+        /*Initially set false because this is turn true only when enter btn is pressed.*/
         titleEntered=false;
 
     }
@@ -98,6 +107,8 @@ public class PinEditFragment extends Fragment{
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         Log.d(TAG,"onCreateView");
+
+        /*Inflate all the views.*/
         view = inflater.inflate(R.layout.pin_edit_fragment, container, false);
         pinTitle = view.findViewById(R.id.pinTitle);
         pinImage = view.findViewById(R.id.pinImage);
@@ -111,58 +122,108 @@ public class PinEditFragment extends Fragment{
         tagRecyclerView = view.findViewById(R.id.tag_recycler_view);
         commentRecyclerView = view.findViewById(R.id.comment_recycler_view);
         pinVideo = view.findViewById(R.id.pinVideo);
-        /*This field is transparent on top of pinVideo so be able to use onClickListener.
+        /*NOTE: This field is transparent on top of pinVideo to make VideoView react to clicks.
         * Because using onTouchListener directly on VideoView detected multiple touches.*/
         pinVideoView = view.findViewById(R.id.pinVideoView);
         playBtn = view.findViewById(R.id.playBtn);
 
+        return view;
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        Log.d(TAG,"onAttach");
+        listener = (InteractionListener) context;
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        Log.d(TAG,"onPause");
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Log.d(TAG,"onResume");
+
+        /*Set the board id (foreign key) of the pin object.*/
         pin.setBoardId(String.valueOf(board.getId()));
 
-        /*Set the fragment image view with the default image boardUri.*/
+        /*Set the pin image view.*/
         if(MainActivity.selectedMedia.equals("Photo")){
             pinImage.setVisibility(View.VISIBLE);
             pinVideo.setVisibility(View.INVISIBLE);
             playBtn.setVisibility(View.INVISIBLE);
-            pinImage.setImageBitmap(MainActivity.pinBitmap);
-            /*Set the board_item object boardUri with the default boardUri.*/
-            pin.setImage(MainActivity.pinBitmap);
+            pinImage.setImageURI(MainActivity.pinImageUri);
+            /*Set the pin object image.*/
+            pin.setImage(MainActivity.pinImageUri);
+        /*Set the pin video view.*/
         }else if(MainActivity.selectedMedia.equals("Video")){
             pinImage.setVisibility(View.INVISIBLE);
             pinVideo.setVisibility(View.VISIBLE);
             playBtn.setVisibility(View.INVISIBLE);
             pinVideo.setVideoURI(MainActivity.pinVideoUri);
-            /*https://stackoverflow.com/questions/3263736/playing-a-video-in-videoview-in-android*/
             pinVideo.start();
-            /*Set the board_item object boardUri with the default boardUri.*/
-//            pin.setVideo(MainActivity.pinUri);
+            /*Set the pin object video.*/
             pin.setVideo(MainActivity.pinVideoUri);
         }
-
-
 
         /*Display key board.*/
         imgr = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
         if (imgr != null) {
             imgr.toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY);
+            pinTitle.requestFocus();
         }
-        /*Request focus on the board title edit text so that user can start typing as soon as fragment is opened.*/
-        pinTitle.requestFocus();
 
         enter.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                /*Set board_item title.*/
+                /*Set board object title.*/
                 pin.setTitle(pinTitle.getText().toString());
                 /*Dismiss the keyboard.*/
                 imgr.hideSoftInputFromWindow(pinTitle.getWindowToken(), 0);
+                /*Set to true.*/
                 titleEntered = true;
+            }
+        });
+
+        pinImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                /*Hide the keyboard.*/
+                imgr.hideSoftInputFromWindow(pinTitle.getWindowToken(), 0);
+            }
+        });
+        /*Set the transparent image view on top of the video view with a click listener.*/
+        pinVideoView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                /*Hide the keyboard.*/
+                imgr.hideSoftInputFromWindow(pinTitle.getWindowToken(), 0);
+                if(pinVideo.isPlaying()){
+                    pinVideo.pause();
+                    playBtn.setVisibility(View.VISIBLE);
+                }else {
+                    pinVideo.start();
+                    playBtn.setVisibility(View.INVISIBLE);
+                }
+
+            }
+        });
+        /*Check when the video view has completed playing.*/
+        pinVideo.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mediaPlayer) {
+                playBtn.setVisibility(View.VISIBLE);
             }
         });
 
         tagBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                /*Create a new tag object.*/
                 tag = new Tag();
                 /*Create dialog to enter tag.*/
                 AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getActivity());
@@ -177,27 +238,29 @@ public class PinEditFragment extends Fragment{
                 if (imgr != null) {
                     imgr.toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY);
                 }
-
                 /*Request cursor focus on the edit text so that user can start typing as soon as fragment is opened.*/
                 editText.requestFocus();
 
                 dialogBuilder.setPositiveButton("Save", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
 
-                        /*Set the tag and add it to the list of tags.*/
+                        /*Set the text of the tag object.*/
                         tag.setTag(editText.getText().toString());
+                        /*Add the tag object to the list.*/
                         tagList.add(tag);
+                        /*Set the pin's tag list.*/
                         pin.setTagList(tagList);
 
                         if(tagList.size()>0) {
+                            /*Create the adapter.*/
                             tagListAdapter = new TagListAdapter(tagList);
+                            /*Create the recycler view.*/
                             tagRecyclerView.setAdapter(tagListAdapter);
                             tagRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
                             noTags.setVisibility(View.INVISIBLE);
                         }else{
                             noTags.setVisibility(View.VISIBLE);
                         }
-
                         /*Dismiss the keyboard.*/
                         imgr.hideSoftInputFromWindow(editText.getWindowToken(), 0);
                         dialog.dismiss();
@@ -220,7 +283,7 @@ public class PinEditFragment extends Fragment{
         commentBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                /*Create a new comment object.*/
                 comment = new Comment();
                 /*Create dialog to enter comment.*/
                 AlertDialog.Builder dialogBuilder = new AlertDialog.Builder(getActivity());
@@ -235,27 +298,29 @@ public class PinEditFragment extends Fragment{
                 if (imgr != null) {
                     imgr.toggleSoftInput(InputMethodManager.SHOW_FORCED, InputMethodManager.HIDE_IMPLICIT_ONLY);
                 }
-
                 /*Request cursor focus on the edit text so that user can start typing as soon as fragment is opened.*/
                 editText.requestFocus();
 
                 dialogBuilder.setPositiveButton("Done", new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int whichButton) {
 
-                        /*Create a topic.*/
+                        /*Set the text of the comment object..*/
                         comment.setComment(editText.getText().toString());
+                        /*Add the comment object to the list.*/
                         commentList.add(comment);
+                        /*Set the pin's comment list.*/
                         pin.setCommentList(commentList);
 
                         if(commentList.size()>0) {
+                            /*Create the adapter.*/
                             commentListAdapter = new CommentListAdapter(commentList);
+                            /*Create the recycler view.*/
                             commentRecyclerView.setAdapter(commentListAdapter);
                             commentRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
                             noComments.setVisibility(View.INVISIBLE);
                         }else{
                             noComments.setVisibility(View.VISIBLE);
                         }
-
                         /*Dismiss the keyboard.*/
                         imgr.hideSoftInputFromWindow(editText.getWindowToken(), 0);
                         dialog.dismiss();
@@ -275,20 +340,19 @@ public class PinEditFragment extends Fragment{
             }
         });
 
-
-        /*Notify the main activity that cancel button is clicked.*/
         cancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                /*Notify the main activity that cancel button is clicked.*/
                 listener.onPinEditCancelInteraction(true);
             }
         });
 
-        /*Notify the main activity that save button is clicked. And pass the board_item with the title set.*/
         save.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if(!pinTitle.getText().toString().isEmpty() && titleEntered){
+                    /*Notify the main activity that save button is clicked and pass the pin object.*/
                     listener.onPinEditSaveInteraction(pin);
                 }else{
                     Toast.makeText(getActivity(),"Enter a title and press + ...", Toast.LENGTH_SHORT).show();
@@ -296,95 +360,6 @@ public class PinEditFragment extends Fragment{
             }
         });
 
-        return view;
-    }
-
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        Log.d(TAG,"onAttach");
-        listener = (InteractionListener) context;
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        Log.d(TAG,"onPause");
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        Log.d(TAG,"onResume");
-        if(MainActivity.selectedMedia.equals("Photo")){
-            pinImage.setVisibility(View.VISIBLE);
-            pinVideo.setVisibility(View.INVISIBLE);
-            playBtn.setVisibility(View.INVISIBLE);
-            pinImage.setImageBitmap(MainActivity.pinBitmap);
-            /*Set the board_item object boardUri with the new boardUri.*/
-            pin.setImage(MainActivity.pinBitmap);
-        }else if(MainActivity.selectedMedia.equals("Video")){
-            pinImage.setVisibility(View.INVISIBLE);
-            pinVideo.setVisibility(View.VISIBLE);
-            playBtn.setVisibility(View.INVISIBLE);
-            pinVideo.setVideoURI(MainActivity.pinVideoUri);
-            /*https://stackoverflow.com/questions/3263736/playing-a-video-in-videoview-in-android*/
-            pinVideo.start();
-            /*Set the board_item object boardUri with the default boardUri.*/
-//            pin.setVideo(MainActivity.pinUri);
-            pin.setVideo(MainActivity.pinVideoUri);
-        }
-
-        pinImage.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                /*Hide the keyboard.*/
-                imgr.hideSoftInputFromWindow(pinTitle.getWindowToken(), 0);
-            }
-        });
-
-        pinVideoView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                /*Hide the keyboard.*/
-                imgr.hideSoftInputFromWindow(pinTitle.getWindowToken(), 0);
-
-                if(pinVideo.isPlaying()){
-                    pinVideo.pause();
-                    playBtn.setVisibility(View.VISIBLE);
-                }else {
-                    pinVideo.start();
-                    playBtn.setVisibility(View.INVISIBLE);
-                }
-
-            }
-        });
-
-        pinVideo.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-            @Override
-            public void onCompletion(MediaPlayer mediaPlayer) {
-                playBtn.setVisibility(View.VISIBLE);
-            }
-        });
-        
-        if(tagList.size()>0) {
-            tagListAdapter = new TagListAdapter(tagList);
-            tagRecyclerView.setAdapter(tagListAdapter);
-            tagRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-            noTags.setVisibility(View.INVISIBLE);
-        }else{
-            noTags.setVisibility(View.VISIBLE);
-        }
-
-
-        if(commentList.size()>0) {
-            commentListAdapter = new CommentListAdapter(commentList);
-            commentRecyclerView.setAdapter(commentListAdapter);
-            commentRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-            noComments.setVisibility(View.INVISIBLE);
-        }else{
-            noComments.setVisibility(View.VISIBLE);
-        }
     }
 
     @Override

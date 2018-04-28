@@ -1,7 +1,6 @@
 package com.example.personalpins.UI;
 
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,7 +20,6 @@ public class PinListAdapter extends RecyclerView.Adapter<PinListAdapter.ViewHold
     private static final String TAG = PinListAdapter.class.getSimpleName();
     private ArrayList<Pin> pinList;
     InteractionListener listener;
-    Pin pin;
 
     public PinListAdapter(ArrayList<Pin> pinList, InteractionListener listener) {
         this.pinList = pinList;
@@ -37,44 +35,41 @@ public class PinListAdapter extends RecyclerView.Adapter<PinListAdapter.ViewHold
 
     @Override
     public void onBindViewHolder(final ViewHolder holder, final int position) {
-        holder.pinTitle.setText(pinList.get(position).getTitle());
 
-        pin = pinList.get(position);
+        /*Get a pin from position.*/
+        final Pin pin = pinList.get(position);
 
+        /*Set the pin title view.*/
+        holder.pinTitle.setText(pin.getTitle());
+            /*Set the pin image view.*/
             if (pin.getImage()!=null) {
                 holder.pinImage.setVisibility(View.VISIBLE);
                 holder.pinVideo.setVisibility(View.INVISIBLE);
                 holder.playBtn.setVisibility(View.INVISIBLE);
-                holder.pinImage.setImageBitmap(pin.getImage());
-                Log.d(TAG,"Image uri is: " + pin.getImage());
-
-                /*Notify the main activity of the board_item image clicked.*/
+                holder.pinImage.setImageURI(pin.getImage());
                 holder.pinImage.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        Log.d(TAG,"Image clicked.");
-                        listener.onPinListAdapterInteraction(pinList.get(position));
+                        /*Notify the main activity of the board_item image clicked.*/
+                        listener.onPinListAdapterInteraction(pin);
                     }
                 });
-
+            /*Set the pin video view.*/
             } else if (pin.getVideo()!=null) {
                 holder.pinImage.setVisibility(View.INVISIBLE);
                 holder.pinVideo.setVisibility(View.VISIBLE);
                 holder.playBtn.setVisibility(View.VISIBLE);
                 holder.pinVideo.setVideoURI(pin.getVideo());
-                Log.d(TAG,"Video uri is: " + pin.getVideo());
-//                holder.pinVideo.setVideoPath(pin.getVideo().getPath());
                 /*https://stackoverflow.com/questions/17079593/how-to-set-the-preview-image-in-videoview-before-playing*/
                 holder.pinVideo.pause();
                 holder.pinVideo.seekTo(100); // 100 milliseconds (0.1 s) into the clip.
-
                 holder.pinVideoView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        listener.onPinListAdapterInteraction(pinList.get(position));
+                        /*Notify the main activity of the board_item image clicked.*/
+                        listener.onPinListAdapterInteraction(pin);
                     }
                 });
-
         }
     }
 
@@ -91,8 +86,6 @@ public class PinListAdapter extends RecyclerView.Adapter<PinListAdapter.ViewHold
         public final TextView pinTitle;
         public final ImageView pinImage;
         public final VideoView pinVideo;
-        /*This field is transparent on top of pinVideo so be able to use onClickListener.
-        * Because using onTouchListener directly on VideoView detected multiple touches.*/
         public final ImageView pinVideoView;
         public final ImageView playBtn;
 

@@ -6,4 +6,9 @@
     <color name="colorAccent">#ff8cc9</color>
     <color name="colorCancel">#fd0e12</color>
     <color name="colorSave">#20fd1c</color>
+    <color name="colorBlack">#030303</color>
+    <color name="colorGray">#e2d4d4d4</color>
+    <color name="colorBoard">#fddebf</color>
+    <color name="colorBlue">#3c53ff</color>
+    <color name="colorTab">#ffc183</color>
 </resources>

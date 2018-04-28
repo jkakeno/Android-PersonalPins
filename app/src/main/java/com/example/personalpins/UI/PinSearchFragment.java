@@ -73,8 +73,6 @@ public class PinSearchFragment extends Fragment {
             recyclerView.setAdapter(new PinSearchAdapter(searchQuery, listener));
         }
 
-
-
         return view;
     }
 

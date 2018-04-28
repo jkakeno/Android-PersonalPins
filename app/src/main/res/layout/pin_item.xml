@@ -8,7 +8,6 @@
 
     <TextView
         android:id="@+id/pinTitle"
-        android:text="Title"
         android:textSize="20sp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>

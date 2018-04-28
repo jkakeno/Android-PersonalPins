@@ -1,6 +1,5 @@
 package com.example.personalpins.Model;
 
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -10,7 +9,7 @@ import java.util.ArrayList;
 public class Board implements Parcelable{
     long id;
     String title;
-    Bitmap image;
+    Uri image;
     ArrayList<Pin> pinList;
 
     public Board() {
@@ -50,11 +49,11 @@ public class Board implements Parcelable{
         this.title = title;
     }
 
-    public Bitmap getImage() {
+    public Uri getImage() {
         return image;
     }
 
-    public void setImage(Bitmap image) {
+    public void setImage(Uri image) {
         this.image = image;
     }
 

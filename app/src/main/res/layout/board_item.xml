@@ -4,7 +4,7 @@
     android:orientation="vertical"
     android:layout_width="170dp"
     android:layout_height="170dp"
-    android:background="@android:color/holo_orange_light"
+    android:background="@color/colorBoard"
     android:layout_margin="5dp">
 
     <TextView
@@ -14,7 +14,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textAlignment="center"
-        android:background="@android:color/darker_gray"/>
+        android:background="@color/colorGray"/>
 
     <ImageView
         android:id="@+id/boardImage"

@@ -7,7 +7,7 @@
     android:background="@color/colorPrimaryLight">
 
     <TextView
-        android:text="@string/tag"
+        android:text="@string/tag_title"
         android:textSize="20sp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>

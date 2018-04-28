@@ -5,12 +5,15 @@
     <string name="pin_count">Pins:</string>
     <string name="search_icon_title">Search</string>
     <string name="camera_icon_title">Camera</string>
-    <string name="board_title">Board Title</string>
+    <string name="board_title_hint">Board Title</string>
     <string name="cancel">Cancel</string>
     <string name="save">Save</string>
-    <string name="pin_title">Pin Title</string>
-    <string name="tags">Tags</string>
+    <string name="pin_title_hint">Pin Title</string>
     <string name="enter">+</string>
-    <string name="tag">Tag:</string>
-    <string name="comment">Comment:</string>
+    <string name="tag_title">Tag</string>
+    <string name="comment_title">Comment</string>
+    <string name="no_tags">No tags</string>
+    <string name="no_comments">No comments</string>
+    <string name="add_photo">Add Photo</string>
+    <string name="add_video">Add Video</string>
 </resources>

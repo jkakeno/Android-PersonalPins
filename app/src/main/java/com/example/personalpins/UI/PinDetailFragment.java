@@ -29,14 +29,15 @@ public class PinDetailFragment extends Fragment{
     private static final String ARG = "pin";
     InteractionListener listener;
     Pin pin;
-    ImageView pinImage;
     ArrayList<Tag> tagList;
     ArrayList<Comment> commentList;
     RecyclerView tagRecyclerView;
     RecyclerView commentRecyclerView;
     TagListAdapter tagListAdapter;
     CommentListAdapter commentListAdapter;
+
     View view;
+    ImageView pinImage;
     TextView noTags;
     TextView noComments;
     TextView pinTitle;
@@ -44,7 +45,10 @@ public class PinDetailFragment extends Fragment{
     ImageView playBtn;
     ImageView pinVideoView;
 
-
+    /**
+     * Mandatory empty constructor for the fragment manager to instantiate the
+     * fragment (e.g. upon screen orientation changes).
+     */
     public PinDetailFragment() {
     }
 
@@ -63,25 +67,25 @@ public class PinDetailFragment extends Fragment{
         Log.d(TAG,"onCreate");
 
         if (getArguments() != null) {
+            /*Get the data from static field ARG.*/
             pin = getArguments().getParcelable(ARG);
         }
         if(pin!=null) {
             if (pin.getTagList() != null) {
                 tagList = pin.getTagList();
-                Log.d(TAG, String.valueOf(tagList.size()));
             }
             if (pin.getCommentList() != null) {
                 commentList = pin.getCommentList();
-                Log.d(TAG, String.valueOf(commentList.size()));
             }
         }
-
     }
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         Log.d(TAG,"onCreateView");
+
+        /*Inflate all the views.*/
         view = inflater.inflate(R.layout.pin_detail_fragment, container, false);
         pinTitle = view.findViewById(R.id.pinTitle);
         pinImage = view.findViewById(R.id.pinImage);
@@ -91,19 +95,20 @@ public class PinDetailFragment extends Fragment{
         commentRecyclerView = view.findViewById(R.id.comment_recycler_view);
         pinVideo = view.findViewById(R.id.pinVideo);
         playBtn = view.findViewById(R.id.playBtn);
-        /*This field is transparent on top of pinVideo so be able to use onClickListener.
+        /*NOTE: This field is transparent on top of pinVideo to make VideoView react to clicks.
         * Because using onTouchListener directly on VideoView detected multiple touches.*/
         pinVideoView = view.findViewById(R.id.pinVideoView);
 
+        /*Set the pin title view.*/
         pinTitle.setText(pin.getTitle());
 
-        /*Set the fragment image view with the default image boardUri.*/
+        /*Set the pin image views.*/
         if(pin.getImage()!=null){
             pinImage.setVisibility(View.VISIBLE);
             pinVideo.setVisibility(View.INVISIBLE);
             playBtn.setVisibility(View.INVISIBLE);
-            pinImage.setImageBitmap(pin.getImage());
-
+            pinImage.setImageURI(pin.getImage());
+        /*Set the pin video view.*/
         }else if(pin.getVideo()!=null){
             pinImage.setVisibility(View.INVISIBLE);
             pinVideo.setVisibility(View.VISIBLE);
@@ -111,7 +116,7 @@ public class PinDetailFragment extends Fragment{
             pinVideo.setVideoURI(pin.getVideo());
             /*https://stackoverflow.com/questions/3263736/playing-a-video-in-videoview-in-android*/
             pinVideo.start();
-
+            /*Set the transparent image view on top of the video view with a click listener.*/
             pinVideoView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -124,18 +129,20 @@ public class PinDetailFragment extends Fragment{
                     }
                 }
             });
-
+            /*Check when the video view has completed playing.*/
             pinVideo.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                 @Override
                 public void onCompletion(MediaPlayer mediaPlayer) {
                     playBtn.setVisibility(View.VISIBLE);
                 }
             });
-
         }
 
+        /*Set the tag list recycler view.*/
         if(tagList.size()>0) {
+            /*Create the adapter.*/
             tagListAdapter = new TagListAdapter(tagList);
+            /*Create the recycler view.*/
             tagRecyclerView.setAdapter(tagListAdapter);
             tagRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
             noTags.setVisibility(View.INVISIBLE);
@@ -143,9 +150,11 @@ public class PinDetailFragment extends Fragment{
             noTags.setVisibility(View.VISIBLE);
         }
 
-
+        /*Set the comment list recycler view.*/
         if(commentList.size()>0) {
+            /*Create the adapter.*/
             commentListAdapter = new CommentListAdapter(commentList);
+            /*Create the recycler view.*/
             commentRecyclerView.setAdapter(commentListAdapter);
             commentRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
             noComments.setVisibility(View.INVISIBLE);
@@ -182,6 +191,5 @@ public class PinDetailFragment extends Fragment{
         super.onDetach();
         Log.d(TAG,"onDetach");
         listener = null;
-//        getActivity().getSupportFragmentManager().popBackStack();
     }
 }

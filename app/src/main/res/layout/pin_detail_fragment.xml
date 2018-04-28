@@ -54,7 +54,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
         <TextView
-            android:text="@string/tags"
+            android:text="@string/tag_title"
             android:textSize="15sp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
@@ -63,7 +63,7 @@
             android:layout_height="wrap_content">
             <TextView
                 android:id="@+id/noTags"
-                android:text="No tags"
+                android:text="@string/no_tags"
                 android:textSize="15sp"
                 android:layout_width="match_parent"
                 android:layout_height="60dp"
@@ -80,7 +80,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
         <TextView
-            android:text="Comments"
+            android:text="@string/comment_title"
             android:textSize="15sp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
@@ -89,7 +89,7 @@
             android:layout_height="wrap_content">
             <TextView
                 android:id="@+id/noComments"
-                android:text="No comments"
+                android:text="@string/no_comments"
                 android:textSize="15sp"
                 android:layout_width="match_parent"
                 android:layout_height="60dp"

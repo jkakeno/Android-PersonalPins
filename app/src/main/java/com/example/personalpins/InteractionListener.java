@@ -9,7 +9,7 @@ public interface InteractionListener {
     void onBoardListFragmentFabInteraction(boolean isClicked);
 
     /*CameraIconInteraction method.*/
-    void onCameraIconInteraction(boolean isClicked);
+    void onCameraIconInteraction(int media);
 
     /*BoardEditFragmentBoardImageInteraction method.*/
     void onBoardEditBoardImageInteraction(boolean isClicked);

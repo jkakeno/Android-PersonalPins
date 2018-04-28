@@ -33,24 +33,27 @@ public class BoardListAdapter extends RecyclerView.Adapter<BoardListAdapter.View
 
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
-        holder.boardTitle.setText(boardList.get(position).getTitle());
 
-        if(boardList.get(position).getPinList()!=null){
-            holder.pinCount.setText(String.valueOf(boardList.get(position).getPinList().size()));
+        /*Get a board from position.*/
+        final Board board = boardList.get(position);
+
+        /*Set the board title view.*/
+        holder.boardTitle.setText(board.getTitle());
+
+        if(board.getPinList()!=null){
+            /*Set the pin count view.*/
+            holder.pinCount.setText(String.valueOf(board.getPinList().size()));
         }else{
             holder.pinCount.setText("0");
         }
 
-        final Board board = boardList.get(position);
+        /*Set the board image view.*/
+        holder.boardImage.setImageURI(board.getImage());
 
-        /*Set the adapter holder view with the image boardUri.*/
-        /*https://stackoverflow.com/questions/2928904/how-to-set-the-bitmap-to-the-imageview-in-main-xml-captured-from-the-camera*/
-        holder.boardImage.setImageBitmap(board.getImage());
-
-        /*Notify the main activity of the board_item image clicked.*/
         holder.boardImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                /*Notify the main activity that the board was clicked.*/
                 listener.onBoardListAdapterInteraction(board);
             }
         });

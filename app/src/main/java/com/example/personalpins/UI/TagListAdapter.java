@@ -29,6 +29,7 @@ public class TagListAdapter extends RecyclerView.Adapter<TagListAdapter.ViewHold
 
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
+        /*Set the tag view.*/
         holder.tag.setText(tagList.get(position).getTag());
     }
 

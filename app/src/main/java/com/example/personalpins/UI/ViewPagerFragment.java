@@ -20,6 +20,10 @@ public class ViewPagerFragment extends Fragment {
     private static final String ARG = "boardList";
     private ArrayList<Board> boardList;
 
+    /**
+     * Mandatory empty constructor for the fragment manager to instantiate the
+     * fragment (e.g. upon screen orientation changes).
+     */
     public ViewPagerFragment() {
     }
 
@@ -37,7 +41,7 @@ public class ViewPagerFragment extends Fragment {
         super.onCreate(savedInstanceState);
 
         if (getArguments() != null) {
-            /*Get the list of boards from static field.*/
+            /*Get the data from static field ARG.*/
             boardList = getArguments().getParcelableArrayList(ARG);
         }
 
@@ -47,12 +51,11 @@ public class ViewPagerFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 
-        /*Inflate the view that will be display when this fragment is created.*/
+        /*Inflate all the views.*/
         View view = inflater.inflate(R.layout.viewpager_fragment,container, false);
 
         /*Create the fragments for the view pager.*/
         final PinSearchFragment searchFragment = new PinSearchFragment();
-        /*Instantiate BoradFragment.newInstance() and pass the boardList.*/
         final BoardListFragment boardFragment = BoardListFragment.newInstance(boardList);
 
         /*Set the view pager.*/

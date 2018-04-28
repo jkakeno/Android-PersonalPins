@@ -18,6 +18,7 @@ import android.widget.TextView;
 
 import com.example.personalpins.DataBase;
 import com.example.personalpins.InteractionListener;
+import com.example.personalpins.MainActivity;
 import com.example.personalpins.Model.Board;
 import com.example.personalpins.R;
 
@@ -33,9 +34,11 @@ public class BoardListFragment extends Fragment {
     BoardListAdapter adapter;
     GridLayoutManager layoutManager;
     RecyclerView recyclerView;
-    View view;
     DataBase db;
+
+    View view;
     TextView noBoards;
+    FloatingActionButton fab;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -59,10 +62,11 @@ public class BoardListFragment extends Fragment {
         Log.d(TAG,"onCreate");
 
         if (getArguments() != null) {
-            /*Get the list of boards from static field.*/
+            /*Get the data from static field ARG.*/
             boardList = getArguments().getParcelableArrayList(ARG);
         }
 
+        /*Instantiate the database.*/
         db = new DataBase(getActivity());
 
         /*Create menu item in fragment.*/
@@ -73,8 +77,11 @@ public class BoardListFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         Log.d(TAG,"onCreateView");
+
+        /*Inflate all the views.*/
         view = inflater.inflate(R.layout.board_list_fragment, container, false);
         noBoards = view.findViewById(R.id.noBoards);
+        fab = (FloatingActionButton) view.findViewById(R.id.fab);
 
         if(boardList.size()>0) {
         /*Create the adapter.*/
@@ -90,12 +97,10 @@ public class BoardListFragment extends Fragment {
             noBoards.setVisibility(View.VISIBLE);
         }
 
-        /*Set the fab.*/
-        FloatingActionButton fab = (FloatingActionButton) view.findViewById(R.id.fab);
-        /*Notify main activity that fab is clicked.*/
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                /*Notify main activity that fab is clicked.*/
                 listener.onBoardListFragmentFabInteraction(true);
             }
         });
@@ -122,6 +127,7 @@ public class BoardListFragment extends Fragment {
         super.onResume();
         Log.d(TAG,"onResume");
 
+        /*Get an updated board list form the database.*/
         boardList=db.getBoardList();
 
         if(boardList.size()>0) {
@@ -157,8 +163,12 @@ public class BoardListFragment extends Fragment {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        if(id == R.id.camera){
-            listener.onCameraIconInteraction(true);
+        if(id == R.id.imageCamera){
+            /*Notify main activity that the camera button is clicked.*/
+            listener.onCameraIconInteraction(MainActivity.MEDIA_TYPE_IMAGE);
+        }else if(id == R.id.videoCamera){
+            /*Notify main activity that the camera button is clicked.*/
+            listener.onCameraIconInteraction(MainActivity.MEDIA_TYPE_VIDEO);
         }
         return super.onOptionsItemSelected(item);
     }

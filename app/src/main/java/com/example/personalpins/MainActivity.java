@@ -1,15 +1,10 @@
 package com.example.personalpins;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Environment;
-import android.provider.MediaStore;
-import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.example.personalpins.Model.Board;
 import com.example.personalpins.Model.Pin;
@@ -20,10 +15,7 @@ import com.example.personalpins.UI.PinListFragment;
 import com.example.personalpins.UI.ViewPagerFragment;
 
 import java.io.File;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 
 /*This app allows users to organize their photos and videos in collections.
 The user can add comments or tags to each photo or video.
@@ -38,15 +30,11 @@ public class MainActivity extends AppCompatActivity implements InteractionListen
     public static final int REQUEST_PICK_BOARD_PHOTO = 2;
     public static final int REQUEST_PICK_PIN_PHOTO = 3;
     public static final int REQUEST_PICK_PIN_VIDEO = 4;
-
     public static final int MEDIA_TYPE_IMAGE = 5;
     public static final int MEDIA_TYPE_VIDEO = 6;
 
-    /*Create a field to store the path to save the picture or video in the device.*/
-    public static Bitmap boardBitmap;
     public static Uri boardUri;
-    public static Bitmap pinBitmap;
-    public static Uri pinUri;
+    public static Uri pinImageUri;
     public static Uri pinVideoUri;
     public static String selectedMedia;
 
@@ -83,25 +71,12 @@ public class MainActivity extends AppCompatActivity implements InteractionListen
             if(requestCode == REQUEST_PICK_BOARD_PHOTO){
                 if(data !=null){
                     boardUri = data.getData();
-                    /*Store board image bitmap.*/
-                    /*https://stackoverflow.com/questions/3879992/how-to-get-bitmap-from-an-uri*/
-                    try {
-                        boardBitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(),boardUri);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
                 }
             }
             if(requestCode == REQUEST_PICK_PIN_PHOTO){
                 if(data !=null) {
-                    pinUri = data.getData();
-                    /*Store pin image bitmap.*/
-                    /*https://stackoverflow.com/questions/3879992/how-to-get-bitmap-from-an-uri*/
-                    try {
-                        pinBitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(),pinUri);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                    pinImageUri = data.getData();
+
                     /*Start Pin_Edit_Fragment and pass the selected board.*/
                     PinEditFragment pinEditFragment = PinEditFragment.newInstance(selectedBoard);
                     getSupportFragmentManager().beginTransaction().replace(R.id.container, pinEditFragment).addToBackStack(null).commit();
@@ -109,12 +84,7 @@ public class MainActivity extends AppCompatActivity implements InteractionListen
             }else if(requestCode == REQUEST_PICK_PIN_VIDEO){
                 if(data !=null){
                     pinVideoUri=data.getData();
-                    /*Persist permission to open uri files after app is restarted:
-                    * http://www.andreamaglie.com/2015/access-storage-framework-uri-permission/
-                    * https://stackoverflow.com/questions/19837358/android-kitkat-securityexception-when-trying-to-read-from-mediastore*/
-//                    this.grantUriPermission(this.getPackageName(), pinVideoUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
-//                    final int takeFlags = data.getFlags() & (Intent.FLAG_GRANT_READ_URI_PERMISSION| Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-//                    this.getContentResolver().takePersistableUriPermission(pinVideoUri, takeFlags);
+
                     /*Start Pin_Edit_Fragment and pass the selected board.*/
                     PinEditFragment pinEditFragment = PinEditFragment.newInstance(selectedBoard);
                     getSupportFragmentManager().beginTransaction().replace(R.id.container, pinEditFragment).addToBackStack(null).commit();
@@ -127,6 +97,7 @@ public class MainActivity extends AppCompatActivity implements InteractionListen
     @Override
     public void onBoardListFragmentFabInteraction(boolean isClicked) {
         Log.d(TAG, "BoardListFragment FAB pressed");
+
         /*Start Board_Edit_Fragment.*/
         BoardEditFragment boardEditFragment = new BoardEditFragment();
         getSupportFragmentManager().beginTransaction().replace(R.id.container, boardEditFragment).addToBackStack(null).commit();
@@ -145,13 +116,6 @@ public class MainActivity extends AppCompatActivity implements InteractionListen
             /*Set default board image with fixed image.*/
             /*https://stackoverflow.com/questions/4896223/how-to-get-an-uri-of-an-image-resource-in-android/38340580*/
             boardUri = Uri.parse("android.resource://com.example.personalpins/" + R.drawable.ic_board_image_default);
-            /*Store board image bitmap.*/
-            /*https://stackoverflow.com/questions/3879992/how-to-get-bitmap-from-an-uri*/
-            try {
-                boardBitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(),boardUri);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
     }
 
@@ -165,8 +129,7 @@ public class MainActivity extends AppCompatActivity implements InteractionListen
     public void onBoardEditSaveInteraction(Board board) {
         /*Send the saved board to the data base.*/
         db.insertBoard(board);
-        Log.d(TAG,"New selectedBoard was added: "+board.getTitle());
-
+        Log.d(TAG,"Board: " + board.getTitle() + " was added to the database.");
 
         /*Get the previous fragment back to display.*/
         getSupportFragmentManager().popBackStackImmediate();
@@ -175,9 +138,8 @@ public class MainActivity extends AppCompatActivity implements InteractionListen
     @Override
     public void onBoardListAdapterInteraction(Board selectedBoard) {
         Log.d(TAG,"Board selected is: " +selectedBoard.getTitle());
-        this.selectedBoard = selectedBoard;
 
-//        long selectedBoardId = selectedBoard.getId();
+        this.selectedBoard = selectedBoard;
         ArrayList<Pin> pinList =selectedBoard.getPinList();
 
         /*Start PinListFragment and pass the selected board id and its list of pins.*/
@@ -187,26 +149,23 @@ public class MainActivity extends AppCompatActivity implements InteractionListen
 
     @Override
     public void onPinListAdapterInteraction(Pin pin) {
-        Log.d(TAG,"Pin is: " + pin.getTitle());
+        Log.d(TAG,"Pin selected is: " + pin.getTitle());
+
         /*Start PinDetailFragment pass the selected pin.*/
         PinDetailFragment pinDetailFragment = PinDetailFragment.newInstance(pin);
         getSupportFragmentManager().beginTransaction().replace(R.id.container, pinDetailFragment).addToBackStack(null).commit();
     }
 
     @Override
-    public void onBackPressed() {
-        super.onBackPressed();
-        Log.d(TAG,"Back pressed.");
-    }
-
-    @Override
     public void onPinListFragmentMenuInteraction(String media) {
         selectedMedia=media;
         Log.d(TAG, "Media selected: " +media);
+
+        /* Open files:
+        * https://developer.android.com/guide/topics/providers/document-provider
+        * https://developer.android.com/reference/android/content/Intent#action_open_document*/
+        /*NOTE: Using ACTION_OPEN_DOCUMENT makes the URI persist after the app is restarted.*/
         if (media.equals("Photo")) {
-            /* Open files:
-            * https://developer.android.com/guide/topics/providers/document-provider
-            * https://developer.android.com/reference/android/content/Intent#action_open_document*/
             Intent pickPhotoIntent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
             pickPhotoIntent.setType("image/*");
             startActivityForResult(pickPhotoIntent, REQUEST_PICK_PIN_PHOTO);
@@ -219,35 +178,30 @@ public class MainActivity extends AppCompatActivity implements InteractionListen
 
     @Override
     public void onPinEditCancelInteraction(boolean isClicked) {
+
         /*Get the previous fragment back to display.*/
         getSupportFragmentManager().popBackStackImmediate();
     }
 
     @Override
     public void onPinEditSaveInteraction(Pin pin) {
-        /*Send the saved pin to the database.*/
+
+        /*Store the pin in the database.*/
         db.insertPin(pin);
+        Log.d(TAG,"Pin: " + pin.getTitle() + " was added to the database.");
 
         /*Get the previous fragment back to display.*/
         getSupportFragmentManager().popBackStackImmediate();
     }
 
     @Override
-    public void onCameraIconInteraction(boolean isClicked) {
-        Log.d(TAG, "Camera icon pressed");
+    public void onCameraIconInteraction(int media) {
+        Log.d(TAG, "Camera icon pressed: "+ media);
 
-        pinUri = getOutputMediaFileUri(MEDIA_TYPE_IMAGE);
+        getOutputMediaFileUri(media);
 
-        if(pinUri == null){
-            Toast.makeText(this,"Something is wrong with your device's external storage.", Toast.LENGTH_SHORT).show();
-        }else{
-            /*Start the camera.*/
-            Intent takePhotoIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            /*Put the image capture in the extra.*/
-            takePhotoIntent.putExtra(MediaStore.EXTRA_OUTPUT, pinUri);
-            /*Request action from the camera.*/
-            startActivityForResult(takePhotoIntent, REQUEST_TAKE_PHOTO);
-        }
+        /*TODO: Start intent to capture video or image.*/
+
     }
 
     /*This method deletes old instance states sent from the activity to the system to save memory space and prevent "TransactionTooLargeExceptions".
@@ -260,55 +214,44 @@ public class MainActivity extends AppCompatActivity implements InteractionListen
     }
 
     private Uri getOutputMediaFileUri(int mediaType) {
-        /*TODO: Set the file directory to Images not Internal Storage.*/
+
+        /*TODO: Get a file storage directory in Images/Camera for MEDIA_TYPE_IMAGE.*/
         /*https://stackoverflow.com/questions/20523658/how-to-create-application-specific-folder-in-android-gallery*/
+        File mediaStorageDir = getCacheDir();
+        Log.d(TAG,"Directory is: "+mediaStorageDir);
 
-        /*Check for external storage.*/
-        if(isExternalStorageAvailable()){
-            /*Get the URI.*/
-            /* 1. Get the external storage directory.*/
-            File mediaStorageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+//        File mediaStorageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
 
-            /* 2. Create a unique file name.*/
-            String fileName = "";
-            String fileType = "";
-            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        /*TODO: Get a file storage directory in Video/Camera for MEDIA_TYPE_VIDEO.*/
 
-            if (mediaType == MEDIA_TYPE_IMAGE) {
-                fileName = "IMG_"+ timeStamp;
-                fileType = ".jpg";
-            } else if(mediaType == MEDIA_TYPE_VIDEO) {
-                fileName = "VID_"+ timeStamp;
-                fileType = ".mp4";
-            } else {
-                return null;
-            }
 
-            /* 3. Create the file.*/
-            File mediaFile;
-            try {
-                mediaFile = File.createTempFile(fileName, fileType, mediaStorageDir);
-                Log.d(TAG, "File: " + Uri.fromFile(mediaFile));
+//        /* Create a unique file name.*/
+//        String fileName = "";
+//        String fileType = "";
+//        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+//
+//        if (mediaType == MEDIA_TYPE_IMAGE) {
+//            fileName = "IMG_"+ timeStamp;
+//            fileType = ".jpg";
+//        } else if(mediaType == MEDIA_TYPE_VIDEO) {
+//            fileName = "VID_"+ timeStamp;
+//            fileType = ".mp4";
+//        } else {
+//            return null;
+//        }
+//
+//        /* Create the file.*/
+//        File mediaFile=null;
+//        try {
+//            mediaFile = File.createTempFile(fileName, fileType, mediaStorageDir);
+//            Log.d(TAG, "File: " + Uri.fromFile(mediaFile));
+//        } catch (IOException e){
+//            Log.d(TAG, "Error creating file: " + mediaStorageDir.getAbsolutePath() + fileName + fileType);
+//        }
+//        Uri uri = FileProvider.getUriForFile(MainActivity.this,BuildConfig.APPLICATION_ID + ".provider" , mediaFile);
+//        /* Return the file's URI (the path in the device where the file is created).*/
+//        return uri;
 
-            /* 4. Return the file's URI (the path in the device where the file is created).*/
-//                return Uri.fromFile(mediaFile);
-            /*Replace with this return if target api >= 24 .
-            * https://inthecheesefactory.com/blog/how-to-share-access-to-file-with-fileprovider-on-android-nougat/en*/
-                return FileProvider.getUriForFile(MainActivity.this,BuildConfig.APPLICATION_ID + ".provider" , mediaFile);
-            } catch (IOException e){
-                Log.d(TAG, "Error creating file: " + mediaStorageDir.getAbsolutePath() + fileName + fileType);
-            }
-        }
-        /*Something went wrong.*/
         return null;
-    }
-
-    private boolean isExternalStorageAvailable(){
-        String state = Environment.getExternalStorageState();
-        if(Environment.MEDIA_MOUNTED.equals(state)){
-            return true;
-        }else{
-            return false;
-        }
     }
 }

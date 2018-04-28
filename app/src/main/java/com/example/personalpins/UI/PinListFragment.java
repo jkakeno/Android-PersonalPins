@@ -35,11 +35,12 @@ public class PinListFragment extends Fragment {
     PinListAdapter adapter;
     GridLayoutManager layoutManager;
     RecyclerView recyclerView;
-    View view;
     DataBase db;
     Board board;
-    TextView noPins;
+
+    View view;
     ImageView boardImage;
+    TextView noPins;
     TextView boardTitle;
 
     /**
@@ -65,11 +66,12 @@ public class PinListFragment extends Fragment {
         Log.d(TAG,"onCreate");
 
         if (getArguments() != null) {
-            /*Get the list of pins and board id to which the pin list corresponds to from static field.*/
+            /*Get the data from static field ARG1 and ARG2.*/
             pinList = getArguments().getParcelableArrayList(ARG1);
             board = getArguments().getParcelable(ARG2);
         }
 
+        /*Instantiate the database.*/
         db = new DataBase(getActivity());
 
         /*Create menu item in fragment.*/
@@ -80,19 +82,21 @@ public class PinListFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         Log.d(TAG,"onCreateView");
+
+        /*Inflate all the views.*/
         view = inflater.inflate(R.layout.pin_list_fragment, container, false);
         noPins = view.findViewById(R.id.noPins);
         boardImage = view.findViewById(R.id.boardImage);
         boardTitle = view.findViewById(R.id.boardTitle);
 
-        boardImage.setImageBitmap(board.getImage());
+        /*Set the view fields that form the title of this fragment.*/
+        boardImage.setImageURI(board.getImage());
         boardTitle.setText(board.getTitle());
 
         if(pinList.size()>0) {
             /*Create the adapter.*/
             adapter = new PinListAdapter(pinList, listener);
             layoutManager = new GridLayoutManager(getActivity(), 2);
-
             /*Create the recycler view.*/
             recyclerView = (RecyclerView) view.findViewById(R.id.pin_recycler_view);
             recyclerView.setAdapter(adapter);
@@ -124,18 +128,15 @@ public class PinListFragment extends Fragment {
         super.onResume();
         Log.d(TAG,"onResume");
 
+        /*Get an updated pin list from the database.*/
         pinList = db.getPinList(board.getId());
 
+        /*Update the recycler view.*/
         if(pinList.size()>0) {
-
-//            for(Pin pin : pinList) {
-//                Log.d(TAG, pin.getTitle());
-//            }
-                /*Create the adapter.*/
+            /*Create the adapter.*/
             adapter = new PinListAdapter(pinList, listener);
             layoutManager = new GridLayoutManager(getActivity(), 2);
-
-                /*Create the recycler view.*/
+            /*Create the recycler view.*/
             recyclerView = (RecyclerView) view.findViewById(R.id.pin_recycler_view);
             recyclerView.setAdapter(adapter);
             recyclerView.setLayoutManager(layoutManager);
@@ -165,9 +166,11 @@ public class PinListFragment extends Fragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()){
             case R.id.photo:
+                /*Notify main activity that photo is selected from menu.*/
                 listener.onPinListFragmentMenuInteraction("Photo");
                 return true;
             case R.id.video:
+                /*Notify main activity that video is selected from menu.*/
                 listener.onPinListFragmentMenuInteraction("Video");
                 return true;
             default:
