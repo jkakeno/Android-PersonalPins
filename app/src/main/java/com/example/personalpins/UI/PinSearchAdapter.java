@@ -6,21 +6,22 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.VideoView;
 
 import com.example.personalpins.InteractionListener;
+import com.example.personalpins.Model.Pin;
 import com.example.personalpins.R;
-import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 
 
 public class PinSearchAdapter extends RecyclerView.Adapter<PinSearchAdapter.ViewHolder> {
 
-    private final ArrayList<String> searchQuery;
+    private final ArrayList<Pin> pinList;
     private final InteractionListener listener;
 
-    public PinSearchAdapter(ArrayList<String> query, InteractionListener listener) {
-        searchQuery = query;
+    public PinSearchAdapter(ArrayList<Pin> pinList, InteractionListener listener) {
+        this.pinList = pinList;
         this.listener = listener;
     }
 
@@ -33,29 +34,66 @@ public class PinSearchAdapter extends RecyclerView.Adapter<PinSearchAdapter.View
 
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
-        holder.pinTitle.setText(searchQuery.get(position));
+        /*Get a pin from position.*/
+        final Pin pin = pinList.get(position);
 
-        Picasso.with(holder.pinImage.getContext())
-                .load(R.drawable.ic_board_image_default)
-                .fit()
-                .centerCrop()
-                .into(holder.pinImage);
-
+        /*Set the pin title view.*/
+        holder.pinTitle.setText(pin.getTitle());
+            /*Set the pin image view.*/
+        if (pin.getImage()!=null) {
+            holder.pinImage.setVisibility(View.VISIBLE);
+            holder.pinVideo.setVisibility(View.INVISIBLE);
+            holder.playBtn.setVisibility(View.INVISIBLE);
+            holder.pinImage.setImageURI(pin.getImage());
+            holder.pinImage.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                        /*Notify the main activity of the board_item image clicked.*/
+                    listener.onPinListAdapterInteraction(pin);
+                }
+            });
+            /*Set the pin video view.*/
+        } else if (pin.getVideo()!=null) {
+            holder.pinImage.setVisibility(View.INVISIBLE);
+            holder.pinVideo.setVisibility(View.VISIBLE);
+            holder.playBtn.setVisibility(View.VISIBLE);
+            holder.pinVideo.setVideoURI(pin.getVideo());
+                /*https://stackoverflow.com/questions/17079593/how-to-set-the-preview-image-in-videoview-before-playing*/
+            holder.pinVideo.pause();
+            holder.pinVideo.seekTo(100); // 100 milliseconds (0.1 s) into the clip.
+            holder.pinVideoView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                        /*Notify the main activity of the board_item image clicked.*/
+                    listener.onPinListAdapterInteraction(pin);
+                }
+            });
+        }
     }
 
     @Override
     public int getItemCount() {
-        return searchQuery.size();
+        if(pinList!=null){
+            return pinList.size();
+        }else{
+            return 1;
+        }
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
         public final TextView pinTitle;
         public final ImageView pinImage;
+        public final VideoView pinVideo;
+        public final ImageView pinVideoView;
+        public final ImageView playBtn;
 
         public ViewHolder(View view) {
             super(view);
             pinTitle = (TextView) view.findViewById(R.id.pinTitle);
             pinImage = (ImageView) view.findViewById(R.id.pinImage);
+            pinVideo = (VideoView) view.findViewById(R.id.pinVideo);
+            pinVideoView = (ImageView) view.findViewById(R.id.pinVideoView);
+            playBtn = (ImageView) view.findViewById(R.id.playBtn);
         }
     }
 }

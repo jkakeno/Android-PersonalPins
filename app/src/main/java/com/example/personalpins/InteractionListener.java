@@ -9,7 +9,10 @@ public interface InteractionListener {
     void onBoardListFragmentFabInteraction(boolean isClicked);
 
     /*CameraIconInteraction method.*/
-    void onCameraIconInteraction(int media);
+    void onPhotoCameraIconInteraction(int media);
+
+    /*CameraIconInteraction method.*/
+    void onVideoCameraIconInteraction(int media);
 
     /*BoardEditFragmentBoardImageInteraction method.*/
     void onBoardEditBoardImageInteraction(boolean isClicked);
@@ -34,4 +37,7 @@ public interface InteractionListener {
 
     /*PinEditFragmentSaveInteraction method.*/
     void onPinEditSaveInteraction(Pin pin);
+
+    /*PinSearchFragmentSearchQueryInteraction method.*/
+    void onPinSearchFragmentSearchQueryInteraction(String query);
 }

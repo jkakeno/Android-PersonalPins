@@ -11,14 +11,17 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.example.personalpins.Model.Board;
+import com.example.personalpins.Model.Pin;
 import com.example.personalpins.R;
 
 import java.util.ArrayList;
 
 public class ViewPagerFragment extends Fragment {
 
-    private static final String ARG = "boardList";
+    private static final String ARG1 = "boardList";
+    private static final String ARG2 = "pinList";
     private ArrayList<Board> boardList;
+    private ArrayList<Pin> pinList;
 
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
@@ -28,10 +31,11 @@ public class ViewPagerFragment extends Fragment {
     }
 
     /*Store the received data from main activity in the static field ARG.*/
-    public static ViewPagerFragment newInstance(ArrayList<Board> boardList) {
+    public static ViewPagerFragment newInstance(ArrayList<Board> boardList, ArrayList<Pin> pinList) {
         ViewPagerFragment fragment = new ViewPagerFragment();
         Bundle args = new Bundle();
-        args.putParcelableArrayList(ARG, boardList);
+        args.putParcelableArrayList(ARG1, boardList);
+        args.putParcelableArrayList(ARG2, pinList);
         fragment.setArguments(args);
         return fragment;
     }
@@ -42,7 +46,8 @@ public class ViewPagerFragment extends Fragment {
 
         if (getArguments() != null) {
             /*Get the data from static field ARG.*/
-            boardList = getArguments().getParcelableArrayList(ARG);
+            boardList = getArguments().getParcelableArrayList(ARG1);
+            pinList = getArguments().getParcelableArrayList(ARG2);
         }
 
     }
@@ -55,7 +60,7 @@ public class ViewPagerFragment extends Fragment {
         View view = inflater.inflate(R.layout.viewpager_fragment,container, false);
 
         /*Create the fragments for the view pager.*/
-        final PinSearchFragment searchFragment = new PinSearchFragment();
+        final PinSearchFragment searchFragment = PinSearchFragment.newInstance(pinList);
         final BoardListFragment boardFragment = BoardListFragment.newInstance(boardList);
 
         /*Set the view pager.*/

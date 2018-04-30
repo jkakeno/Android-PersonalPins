@@ -3,6 +3,9 @@ package com.example.personalpins;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
@@ -15,7 +18,10 @@ import com.example.personalpins.UI.PinListFragment;
 import com.example.personalpins.UI.ViewPagerFragment;
 
 import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 
 /*This app allows users to organize their photos and videos in collections.
 The user can add comments or tags to each photo or video.
@@ -39,8 +45,10 @@ public class MainActivity extends AppCompatActivity implements InteractionListen
     public static String selectedMedia;
 
     ArrayList<Board> boardList;
+    ArrayList<Pin> pinList;
     Board selectedBoard;
     DataBase db;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,7 +67,7 @@ public class MainActivity extends AppCompatActivity implements InteractionListen
         getSupportActionBar().setDisplayUseLogoEnabled(true);
 
         /*Instantiate ViewPagerFragment.newInstance() and pass the boardList.*/
-        ViewPagerFragment viewPagerFragment = ViewPagerFragment.newInstance(boardList);
+        ViewPagerFragment viewPagerFragment = ViewPagerFragment.newInstance(boardList, pinList);
         getSupportFragmentManager().beginTransaction().replace(R.id.container, viewPagerFragment).commit();
     }
 
@@ -69,26 +77,25 @@ public class MainActivity extends AppCompatActivity implements InteractionListen
 
         if(resultCode == RESULT_OK){
             if(requestCode == REQUEST_PICK_BOARD_PHOTO){
-                if(data !=null){
+
                     boardUri = data.getData();
-                }
-            }
-            if(requestCode == REQUEST_PICK_PIN_PHOTO){
-                if(data !=null) {
+
+            }else if(requestCode == REQUEST_PICK_PIN_PHOTO){
+
                     pinImageUri = data.getData();
 
                     /*Start Pin_Edit_Fragment and pass the selected board.*/
                     PinEditFragment pinEditFragment = PinEditFragment.newInstance(selectedBoard);
                     getSupportFragmentManager().beginTransaction().replace(R.id.container, pinEditFragment).addToBackStack(null).commit();
-                }
+
             }else if(requestCode == REQUEST_PICK_PIN_VIDEO){
-                if(data !=null){
+
                     pinVideoUri=data.getData();
 
                     /*Start Pin_Edit_Fragment and pass the selected board.*/
                     PinEditFragment pinEditFragment = PinEditFragment.newInstance(selectedBoard);
                     getSupportFragmentManager().beginTransaction().replace(R.id.container, pinEditFragment).addToBackStack(null).commit();
-                }
+
             }
         }
     }
@@ -195,13 +202,103 @@ public class MainActivity extends AppCompatActivity implements InteractionListen
     }
 
     @Override
-    public void onCameraIconInteraction(int media) {
+    public void onPinSearchFragmentSearchQueryInteraction(String query) {
+        Log.d(TAG, "Search query: " + query);
+
+        /*Get a pin list from the data base based on the query.*/
+        pinList = db.getPinList(query);
+
+        /*Instantiate ViewPagerFragment.newInstance() and pass the pinList.*/
+        ViewPagerFragment viewPagerFragment = ViewPagerFragment.newInstance(boardList, pinList);
+        getSupportFragmentManager().beginTransaction().replace(R.id.container, viewPagerFragment).commit();
+    }
+
+    @Override
+    public void onPhotoCameraIconInteraction(int media) {
         Log.d(TAG, "Camera icon pressed: "+ media);
 
-        getOutputMediaFileUri(media);
+        Uri uri =getOutputMediaFileUri(media);
 
-        /*TODO: Start intent to capture video or image.*/
+        /*NOTE: Read the doc below to take a photo and save it to gallary.
+        * https://developer.android.com/training/camera/photobasics
+        * */
 
+        /*Start intent to take photos.*/
+        Intent takePhotoIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        /*Put the photo in the created uri.*/
+        takePhotoIntent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+        /*Request action from the camera.*/
+        startActivityForResult(takePhotoIntent, REQUEST_TAKE_PHOTO);
+    }
+
+    @Override
+    public void onVideoCameraIconInteraction(int media) {
+        Log.d(TAG, "Camera icon pressed: "+ media);
+
+        Uri uri =getOutputMediaFileUri(media);
+
+        /*NOTE: Read the doc below to take a video.
+        * https://developer.android.com/training/camera/videobasics
+        * */
+
+        /*Start intent to take photos.*/
+        Intent takeVideoIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
+        /*Put the photo in the created uri.*/
+        takeVideoIntent.putExtra(MediaStore.EXTRA_OUTPUT, uri);
+        /*Request action from the camera.*/
+        startActivityForResult(takeVideoIntent, REQUEST_TAKE_VIDEO);
+    }
+
+    private Uri getOutputMediaFileUri(int mediaType) {
+
+        /*TODO: To get the uri for the file use FileProvider. Read the doc below to set up FileProvider.
+        * https://developer.android.com/reference/android/support/v4/content/FileProvider
+        * */
+
+        /* Note: If you saved your photo to the directory provided by getExternalFilesDir(),
+        * the media scanner (used to send files to public directories)
+        * cannot access the files because they are private to your app.*/
+
+        /*Desired directory for image is: content://com.android.providers.media.documents/document/image%3A1617*/
+        /*Desired directory for video is: content://com.android.providers.media.documents/document/video%3A1616*/
+
+        /*Create the file directory.*/
+        File mediaStorageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        Log.d(TAG,"Directory: " + mediaStorageDir);
+        /*Directory: /storage/emulated/0/Android/data/com.example.personalpins/files/Pictures*/
+
+        /* Create the prefix and suffix for the file.*/
+        String fileName = "";
+        String fileType = "";
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        if (mediaType == MEDIA_TYPE_IMAGE) {
+            fileName = "IMG_"+ timeStamp;
+            fileType = ".jpg";
+        } else if(mediaType == MEDIA_TYPE_VIDEO) {
+            fileName = "VID_"+ timeStamp;
+            fileType = ".mp4";
+        } else {
+            return null;
+        }
+
+        /* Create the file.*/
+        File mediaFile=null;
+        try {
+            mediaFile = File.createTempFile(fileName, fileType, mediaStorageDir);
+            Log.d(TAG, "File: " + Uri.fromFile(mediaFile));
+            /*File: file:///storage/emulated/0/Android/data/com.example.personalpins/files/Pictures/IMG_20180429_1331001966913621.jpg*/
+
+        } catch (IOException e){
+            Log.d(TAG, "Error creating file: " + mediaStorageDir.getAbsolutePath() + fileName + fileType);
+        }
+
+        /*Get the file's uri.*/
+        Uri uri = FileProvider.getUriForFile(MainActivity.this,BuildConfig.APPLICATION_ID + ".provider" , mediaFile);
+        Log.d(TAG,"Uri: "+ uri);
+        /*Uri: content://com.example.personalpins.provider/external_files/Android/data/com.example*/
+
+        /* Return the file's URI (the path in the device where the file is created).*/
+        return uri;
     }
 
     /*This method deletes old instance states sent from the activity to the system to save memory space and prevent "TransactionTooLargeExceptions".
@@ -211,47 +308,5 @@ public class MainActivity extends AppCompatActivity implements InteractionListen
     protected void onSaveInstanceState(Bundle oldInstanceState) {
         super.onSaveInstanceState(oldInstanceState);
         oldInstanceState.clear();
-    }
-
-    private Uri getOutputMediaFileUri(int mediaType) {
-
-        /*TODO: Get a file storage directory in Images/Camera for MEDIA_TYPE_IMAGE.*/
-        /*https://stackoverflow.com/questions/20523658/how-to-create-application-specific-folder-in-android-gallery*/
-        File mediaStorageDir = getCacheDir();
-        Log.d(TAG,"Directory is: "+mediaStorageDir);
-
-//        File mediaStorageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
-
-        /*TODO: Get a file storage directory in Video/Camera for MEDIA_TYPE_VIDEO.*/
-
-
-//        /* Create a unique file name.*/
-//        String fileName = "";
-//        String fileType = "";
-//        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-//
-//        if (mediaType == MEDIA_TYPE_IMAGE) {
-//            fileName = "IMG_"+ timeStamp;
-//            fileType = ".jpg";
-//        } else if(mediaType == MEDIA_TYPE_VIDEO) {
-//            fileName = "VID_"+ timeStamp;
-//            fileType = ".mp4";
-//        } else {
-//            return null;
-//        }
-//
-//        /* Create the file.*/
-//        File mediaFile=null;
-//        try {
-//            mediaFile = File.createTempFile(fileName, fileType, mediaStorageDir);
-//            Log.d(TAG, "File: " + Uri.fromFile(mediaFile));
-//        } catch (IOException e){
-//            Log.d(TAG, "Error creating file: " + mediaStorageDir.getAbsolutePath() + fileName + fileType);
-//        }
-//        Uri uri = FileProvider.getUriForFile(MainActivity.this,BuildConfig.APPLICATION_ID + ".provider" , mediaFile);
-//        /* Return the file's URI (the path in the device where the file is created).*/
-//        return uri;
-
-        return null;
     }
 }

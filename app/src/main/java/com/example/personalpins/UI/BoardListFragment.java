@@ -165,10 +165,10 @@ public class BoardListFragment extends Fragment {
         int id = item.getItemId();
         if(id == R.id.imageCamera){
             /*Notify main activity that the camera button is clicked.*/
-            listener.onCameraIconInteraction(MainActivity.MEDIA_TYPE_IMAGE);
+            listener.onPhotoCameraIconInteraction(MainActivity.MEDIA_TYPE_IMAGE);
         }else if(id == R.id.videoCamera){
             /*Notify main activity that the camera button is clicked.*/
-            listener.onCameraIconInteraction(MainActivity.MEDIA_TYPE_VIDEO);
+            listener.onVideoCameraIconInteraction(MainActivity.MEDIA_TYPE_VIDEO);
         }
         return super.onOptionsItemSelected(item);
     }
